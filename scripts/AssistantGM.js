@@ -19,22 +19,22 @@ export class AssistantGM {
             scope: 'world',
             config: true,
             type: String,
-            default: 'http://localhost:5000',
+            default: 'http://localhost:5932',
             onChange: value => {
                 console.log(`Open WebUI API URL changed to: ${value}`);
                 this.initializeAPI();
             }
         });
 
-        game.settings.register(this.ID, 'apiToken', {
-            name: 'Open WebUI API Token',
-            hint: 'Your API token for authentication',
+        game.settings.register(this.ID, 'jwtToken', {
+            name: 'JWT Token',
+            hint: 'Your JWT token for authentication',
             scope: 'world',
             config: true,
             type: String,
             default: '',
             onChange: value => {
-                console.log('Open WebUI API Token changed');
+                console.log('JWT Token changed');
                 this.initializeAPI();
             }
         });
@@ -59,8 +59,8 @@ export class AssistantGM {
 
     static initializeAPI() {
         const apiUrl = game.settings.get(this.ID, 'apiUrl');
-        const apiToken = game.settings.get(this.ID, 'apiToken');
-        this.api = new OpenWebUIAPI(apiUrl, apiToken);
+        const jwtToken = game.settings.get(this.ID, 'jwtToken');
+        this.api = new OpenWebUIAPI(apiUrl, jwtToken);
     }
 
     static async ready() {
@@ -76,11 +76,11 @@ export class AssistantGM {
             console.log('Fetched models:', models);
             
             if (models.length === 0) {
-                ui.notifications.error('No AI models found. Check your API URL and token.');
+                ui.notifications.error('No AI models found. Check your API URL and JWT token.');
                 return;
             }
 
-            const modelChoices = Object.fromEntries(models.map(model => [model.id, model.name]));
+            const modelChoices = Object.fromEntries(models.map(model => [model.name, model.name]));
             
             // Update the choices for the modelName setting
             const setting = game.settings.settings.get(`${this.ID}.modelName`);
@@ -88,8 +88,8 @@ export class AssistantGM {
             
             // If the current model is not in the list, set it to the first available model
             const currentModel = game.settings.get(this.ID, 'modelName');
-            if (!models.some(model => model.id === currentModel) || currentModel === '') {
-                await game.settings.set(this.ID, 'modelName', models[0].id);
+            if (!models.some(model => model.name === currentModel) || currentModel === '') {
+                await game.settings.set(this.ID, 'modelName', models[0].name);
             }
             
             // Refresh the settings form
@@ -105,7 +105,7 @@ export class AssistantGM {
 
     static async enrichAssistant(match, options) {
         const [, prompt, journalName] = match;
-        const modelId = game.settings.get(this.ID, 'modelName');
+        const modelName = game.settings.get(this.ID, 'modelName');
         
         let fullPrompt = prompt;
         if (journalName) {
@@ -118,7 +118,7 @@ export class AssistantGM {
         }
 
         try {
-            const generatedText = await this.api.generateText(modelId, fullPrompt);
+            const generatedText = await this.api.generateText(modelName, fullPrompt);
             const span = document.createElement('span');
             span.classList.add('assistant-generated-text');
             span.textContent = generatedText;
@@ -131,9 +131,9 @@ export class AssistantGM {
     }
 
     static async generateTextFromPrompt(prompt) {
-        const modelId = game.settings.get(this.ID, 'modelName');
+        const modelName = game.settings.get(this.ID, 'modelName');
         try {
-            return await this.api.generateText(modelId, prompt);
+            return await this.api.generateText(modelName, prompt);
         } catch (error) {
             console.error('Error generating text:', error);
             ui.notifications.error(`Failed to generate text: ${error.message}`);
