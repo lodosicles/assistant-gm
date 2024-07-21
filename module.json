@@ -28,6 +28,9 @@
       "path": "languages/en.json"
     }
   ],
+  "templates": [
+  "templates/settings.html"
+  ]
   "url": "https://github.com/lodosicles/assistant-gm",
   "manifest": "https://raw.githubusercontent.com/lodosicles/assistant-gm/main/module.json",
   "download": "https://github.com/lodosicles/assistant-gm/archive/v1.0.0.zip",
