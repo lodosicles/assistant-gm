@@ -17,7 +17,7 @@ export class AssistantGM {
             name: 'Open WebUI API URL',
             hint: 'The URL of your Open WebUI API',
             scope: 'world',
-            config: false,
+            config: true,
             type: String,
             default: 'http://localhost:5932'
         });
@@ -26,7 +26,7 @@ export class AssistantGM {
             name: 'JWT Token',
             hint: 'Your JWT token for authentication',
             scope: 'world',
-            config: false,
+            config: true,
             type: String,
             default: ''
         });
@@ -35,18 +35,19 @@ export class AssistantGM {
             name: 'AI Model',
             hint: 'Select the AI model to use',
             scope: 'world',
-            config: false,
+            config: true,
             type: String,
             default: '',
             choices: {}
         });
 
-        game.settings.registerMenu(this.ID, 'settingsMenu', {
-            name: 'AssistantGM Settings',
-            label: 'Open Settings',
-            hint: 'Configure the AssistantGM integration settings.',
-            icon: 'fas fa-cogs',
-            type: AssistantGMSettingsForm,
+        // Add a custom button to the settings form
+        game.settings.registerMenu(this.ID, 'fetchModels', {
+            name: 'Fetch AI Models',
+            label: 'Fetch Models',
+            hint: 'Fetch available AI models from the API',
+            icon: 'fas fa-sync',
+            type: FetchModelsForm,
             restricted: true
         });
     }
@@ -70,7 +71,7 @@ export class AssistantGM {
         await this.updateAvailableModels();
     }
 
-    static async updateAvailableModels(settingsApp) {
+    static async updateAvailableModels() {
         console.log('Fetching available AI models...');
         try {
             const models = await this.api.getModels();
@@ -93,10 +94,6 @@ export class AssistantGM {
                 await game.settings.set(this.ID, 'modelName', models[0].name);
             }
             
-            // Refresh the settings form
-            if (settingsApp) {
-                settingsApp.render(true);
-            }
             ui.notifications.info('AI models updated successfully');
         } catch (error) {
             console.error('Error fetching models:', error);
@@ -141,49 +138,32 @@ export class AssistantGM {
             return null;
         }
     }
-
-    static async fetchModelsForSettings(settingsApp) {
-        await this.updateAvailableModels(settingsApp);
-    }
 }
 
-class AssistantGMSettingsForm extends FormApplication {
+class FetchModelsForm extends FormApplication {
     static get defaultOptions() {
         return mergeObject(super.defaultOptions, {
-            id: 'assistant-gm-settings',
-            title: 'AssistantGM Settings',
-            template: 'modules/assistant-gm/templates/settings.html',
-            width: 500,
-            height: 'auto',
-            closeOnSubmit: false
+            id: 'fetch-models-form',
+            title: 'Fetch AI Models',
+            template: 'templates/apps/form-application.html',
+            width: 300,
+            height: 'auto'
         });
     }
 
-    getData(options) {
-        const data = super.getData(options);
-        data.apiUrl = game.settings.get('assistant-gm', 'apiUrl');
-        data.jwtToken = game.settings.get('assistant-gm', 'jwtToken');
-        data.modelName = game.settings.get('assistant-gm', 'modelName');
-        data.modelChoices = game.settings.settings.get('assistant-gm.modelName').choices;
-        return data;
-    }
-
-    async _updateObject(event, formData) {
-        await game.settings.set('assistant-gm', 'apiUrl', formData.apiUrl);
-        await game.settings.set('assistant-gm', 'jwtToken', formData.jwtToken);
-        await game.settings.set('assistant-gm', 'modelName', formData.modelName);
-        
-        AssistantGM.initializeAPI();
-        ui.notifications.info('AssistantGM settings updated');
+    getData() {
+        return {
+            content: '<p>Click the button below to fetch available AI models from the API.</p>'
+        };
     }
 
     activateListeners(html) {
         super.activateListeners(html);
-        html.find('#fetch-models').click(this._onFetchModels.bind(this));
+        html.find('button[type="submit"]').text('Fetch Models');
     }
 
-    async _onFetchModels(event) {
-        event.preventDefault();
-        await AssistantGM.updateAvailableModels(this);
+    async _updateObject(event, formData) {
+        await AssistantGM.updateAvailableModels();
+        this.close();
     }
 }
