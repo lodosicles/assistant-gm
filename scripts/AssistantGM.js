@@ -129,4 +129,19 @@ export class AssistantGM {
             return null;
         }
     }
+
+    static async generateTextFromPrompt(prompt) {
+        const model = game.settings.get(this.ID, 'modelName');
+        try {
+            return await this.api.generateText(model, prompt);
+        } catch (error) {
+            console.error('Error generating text:', error);
+            ui.notifications.error(`Failed to generate text: ${error.message}`);
+            return null;
+        }
+    }
+
+    static async fetchModelsForSettings(settingsApp) {
+        await this.updateAvailableModels(settingsApp);
+    }
 }
