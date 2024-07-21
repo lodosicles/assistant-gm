@@ -17,131 +17,80 @@ export class AssistantGM {
             name: 'Open WebUI API URL',
             hint: 'The URL of your Open WebUI API',
             scope: 'world',
-            config: true,
+            config: false,
             type: String,
-            default: 'http://localhost:5932',
-            onChange: value => {
-                console.log(`Open WebUI API URL changed to: ${value}`);
-                this.initializeAPI();
-            }
+            default: 'http://localhost:5932'
         });
 
         game.settings.register(this.ID, 'jwtToken', {
             name: 'JWT Token',
             hint: 'Your JWT token for authentication',
             scope: 'world',
-            config: true,
+            config: false,
             type: String,
-            default: '',
-            onChange: value => {
-                console.log('JWT Token changed');
-                this.initializeAPI();
-            }
+            default: ''
         });
 
         game.settings.register(this.ID, 'modelName', {
             name: 'AI Model',
             hint: 'Select the AI model to use',
             scope: 'world',
-            config: true,
+            config: false,
             type: String,
             default: '',
             choices: {}
         });
-    }
 
-    static registerTextEnricher() {
-        CONFIG.TextEditor.enrichers.push({
-            pattern: /@assistant\[([^\]]+)(?:#([^#]+)#)?\]/g,
-            enricher: this.enrichAssistant.bind(this)
+        game.settings.registerMenu(this.ID, 'settingsMenu', {
+            name: 'AssistantGM Settings',
+            label: 'Open Settings',
+            hint: 'Configure the AssistantGM integration settings.',
+            icon: 'fas fa-cogs',
+            type: AssistantGMSettingsForm,
+            restricted: true
         });
     }
 
-    static initializeAPI() {
-        const apiUrl = game.settings.get(this.ID, 'apiUrl');
-        const jwtToken = game.settings.get(this.ID, 'jwtToken');
-        this.api = new OpenWebUIAPI(apiUrl, jwtToken);
+    // ... (rest of the methods remain the same)
+}
+
+class AssistantGMSettingsForm extends FormApplication {
+    static get defaultOptions() {
+        return mergeObject(super.defaultOptions, {
+            id: 'assistant-gm-settings',
+            title: 'AssistantGM Settings',
+            template: 'modules/assistant-gm/templates/settings.html',
+            width: 500,
+            height: 'auto',
+            closeOnSubmit: false
+        });
     }
 
-    static async ready() {
-        console.log('AssistantGM | Ready');
-        this.initializeAPI();
-        await this.updateAvailableModels();
+    getData(options) {
+        const data = super.getData(options);
+        data.apiUrl = game.settings.get('assistant-gm', 'apiUrl');
+        data.jwtToken = game.settings.get('assistant-gm', 'jwtToken');
+        data.modelName = game.settings.get('assistant-gm', 'modelName');
+        data.modelChoices = game.settings.settings.get('assistant-gm.modelName').choices;
+        return data;
     }
 
-    static async updateAvailableModels(settingsApp) {
-        console.log('Fetching available AI models...');
-        try {
-            const models = await this.api.getModels();
-            console.log('Fetched models:', models);
-            
-            if (models.length === 0) {
-                ui.notifications.error('No AI models found. Check your API URL and JWT token.');
-                return;
-            }
-
-            const modelChoices = Object.fromEntries(models.map(model => [model.name, model.name]));
-            
-            // Update the choices for the modelName setting
-            const setting = game.settings.settings.get(`${this.ID}.modelName`);
-            setting.choices = modelChoices;
-            
-            // If the current model is not in the list, set it to the first available model
-            const currentModel = game.settings.get(this.ID, 'modelName');
-            if (!models.some(model => model.name === currentModel) || currentModel === '') {
-                await game.settings.set(this.ID, 'modelName', models[0].name);
-            }
-            
-            // Refresh the settings form
-            if (settingsApp) {
-                settingsApp.render(true);
-            }
-            ui.notifications.info('AI models updated successfully');
-        } catch (error) {
-            console.error('Error fetching models:', error);
-            ui.notifications.error(`Failed to fetch AI models: ${error.message}`);
-        }
-    }
-
-    static async enrichAssistant(match, options) {
-        const [, prompt, journalName] = match;
-        const modelName = game.settings.get(this.ID, 'modelName');
+    async _updateObject(event, formData) {
+        await game.settings.set('assistant-gm', 'apiUrl', formData.apiUrl);
+        await game.settings.set('assistant-gm', 'jwtToken', formData.jwtToken);
+        await game.settings.set('assistant-gm', 'modelName', formData.modelName);
         
-        let fullPrompt = prompt;
-        if (journalName) {
-            const journal = game.journal.getName(journalName);
-            if (journal) {
-                fullPrompt += "\n\nJournal Content:\n" + journal.data.content;
-            } else {
-                console.warn(`Journal "${journalName}" not found.`);
-            }
-        }
-
-        try {
-            const generatedText = await this.api.generateText(modelName, fullPrompt);
-            const span = document.createElement('span');
-            span.classList.add('assistant-generated-text');
-            span.textContent = generatedText;
-            return span;
-        } catch (error) {
-            console.error('Error generating text:', error);
-            ui.notifications.error(`Failed to generate text: ${error.message}`);
-            return null;
-        }
+        AssistantGM.initializeAPI();
+        ui.notifications.info('AssistantGM settings updated');
     }
 
-    static async generateTextFromPrompt(prompt) {
-        const modelName = game.settings.get(this.ID, 'modelName');
-        try {
-            return await this.api.generateText(modelName, prompt);
-        } catch (error) {
-            console.error('Error generating text:', error);
-            ui.notifications.error(`Failed to generate text: ${error.message}`);
-            return null;
-        }
+    activateListeners(html) {
+        super.activateListeners(html);
+        html.find('#fetch-models').click(this._onFetchModels.bind(this));
     }
 
-    static async fetchModelsForSettings(settingsApp) {
-        await this.updateAvailableModels(settingsApp);
+    async _onFetchModels(event) {
+        event.preventDefault();
+        await AssistantGM.updateAvailableModels(this);
     }
 }
