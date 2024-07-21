@@ -2,14 +2,22 @@
 
 import { OpenWebUIAPI } from './OpenWebUIAPI.js';
 
+console.log('AssistantGM | AssistantGM.js loaded');
+
 export class AssistantGM {
     static ID = 'assistant-gm';
     static api;
 
     static async init() {
         console.log('AssistantGM | Initializing');
-        this.registerSettings();
-        this.registerTextEnricher();
+        try {
+            this.registerSettings();
+            console.log('AssistantGM | Settings registered');
+            this.registerTextEnricher();
+            console.log('AssistantGM | Text enricher registered');
+        } catch (error) {
+            console.error('AssistantGM | Error during initialization:', error);
+        }
     }
 
     static registerSettings() {
@@ -66,10 +74,17 @@ export class AssistantGM {
     }
 
     static async ready() {
-        console.log('AssistantGM | Ready');
-        this.initializeAPI();
-        await this.updateAvailableModels();
+        console.log('AssistantGM | Ready method called');
+        try {
+            this.initializeAPI();
+            console.log('AssistantGM | API initialized');
+            await this.updateAvailableModels();
+            console.log('AssistantGM | Available models updated');
+        } catch (error) {
+            console.error('AssistantGM | Error during ready method:', error);
+        }
     }
+
 
     static async updateAvailableModels() {
         console.log('Fetching available AI models...');
@@ -167,3 +182,5 @@ class FetchModelsForm extends FormApplication {
         this.close();
     }
 }
+
+console.log('AssistantGM | AssistantGM class defined');
