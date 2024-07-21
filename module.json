@@ -2,15 +2,15 @@
   "id": "assistant-gm",
   "title": "AssistantGM",
   "description": "Integrate AI language models into Foundry VTT to assist GMs with dynamic content generation",
-  "version": "0.0.2",
+  "version": "1.0.0",
   "compatibility": {
     "minimum": "10",
-    "verified": "12",
-    "maximum": "12"
+    "verified": "11",
+    "maximum": "11"
   },
   "authors": [
     {
-      "name": "SpareBoot",
+      "name": "Your Name",
       "email": "your.email@example.com",
       "url": "https://yourwebsite.com"
     }
@@ -18,9 +18,11 @@
   "esmodules": [
     "scripts/module.js"
   ],
+  "scripts": [],
   "styles": [
     "styles/assistant-gm.css"
   ],
+  "packs": [],
   "languages": [
     {
       "lang": "en",
@@ -28,24 +30,31 @@
       "path": "languages/en.json"
     }
   ],
-  "templates": [
-  "templates/settings.html"
-  ]
-  "url": "https://github.com/lodosicles/assistant-gm",
-  "manifest": "https://raw.githubusercontent.com/lodosicles/assistant-gm/main/module.json",
-  "download": "https://github.com/lodosicles/assistant-gm/archive/v1.0.0.zip",
+  "socket": false,
+  "url": "https://github.com/yourusername/assistant-gm",
+  "manifest": "https://raw.githubusercontent.com/yourusername/assistant-gm/main/module.json",
+  "download": "https://github.com/yourusername/assistant-gm/releases/download/v1.0.0/assistant-gm-v1.0.0.zip",
   "license": "MIT",
   "readme": "README.md",
-  "bugs": "https://github.com/lodosicles/assistant-gm/issues",
-  "changelog": "https://github.com/lodosicles/assistant-gm/releases",
+  "bugs": "https://github.com/yourusername/assistant-gm/issues",
+  "changelog": "https://github.com/yourusername/assistant-gm/releases",
   "media": [
     {
       "type": "icon",
-      "url": "https://raw.githubusercontent.com/lodosicles/assistant-gm/main/artwork/module-icon.png"
+      "url": "https://raw.githubusercontent.com/yourusername/assistant-gm/main/artwork/icon.png"
     },
     {
       "type": "cover",
-      "url": "https://raw.githubusercontent.com/lodosicles/assistant-gm/main/artwork/module-cover.png"
+      "url": "https://raw.githubusercontent.com/yourusername/assistant-gm/main/artwork/cover.png"
     }
+  ],
+  "relationships": {
+    "requires": []
+  },
+  "flags": {},
+  "dependencies": [],
+  "library": false,
+  "templatePaths": [
+    "templates/settings.html"
   ]
 }
