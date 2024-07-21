@@ -1,0 +1,66 @@
+/* styles/assistant-gm.css */
+
+.assistant-generated-text {
+    display: block;
+    margin: 10px 0;
+    padding: 10px;
+    background-color: #f0f0f0;
+    border-left: 3px solid #4a4a4a;
+    font-style: italic;
+    color: #333333;
+    line-height: 1.6;
+}
+
+input[name="assistant-gm.apiUrl"],
+input[name="assistant-gm.apiToken"] {
+    width: 100%;
+    padding: 5px;
+    margin-bottom: 10px;
+}
+
+select[name="assistant-gm.modelName"] {
+    width: 100%;
+    padding: 5px;
+    margin-bottom: 10px;
+}
+
+#fetch-models {
+    background-color: #4a4a4a;
+    color: white;
+    border: none;
+    padding: 5px 10px;
+    cursor: pointer;
+    transition: background-color 0.2s ease;
+}
+
+#fetch-models:hover {
+    background-color: #5a5a5a;
+}
+
+.assistant-loading {
+    display: inline-block;
+    width: 20px;
+    height: 20px;
+    border: 2px solid #f3f3f3;
+    border-top: 2px solid #3498db;
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+    margin-left: 10px;
+}
+
+@keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}
+
+.assistant-error {
+    color: #ff0000;
+    font-weight: bold;
+    margin-top: 10px;
+}
+
+.assistant-success {
+    color: #00aa00;
+    font-weight: bold;
+    margin-top: 10px;
+}
