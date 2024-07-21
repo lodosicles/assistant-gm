@@ -5,14 +5,33 @@
         "name": "Open WebUI API URL",
         "hint": "The URL of your Open WebUI API"
       },
-      "apiToken": {
-        "name": "Open WebUI API Token",
-        "hint": "Your API token for authentication"
+      "jwtToken": {
+        "name": "JWT Token",
+        "hint": "Your JWT token for authentication"
       },
       "modelName": {
         "name": "AI Model",
         "hint": "Select the AI model to use"
+      },
+      "fetchModels": {
+        "name": "Fetch AI Models",
+        "label": "Fetch Models",
+        "hint": "Fetch available AI models from the API"
       }
+    },
+    "notifications": {
+      "modelsUpdated": "AI models updated successfully",
+      "noModelsFound": "No AI models found. Check your API URL and JWT token.",
+      "fetchError": "Failed to fetch AI models: {error}",
+      "generateError": "Failed to generate text: {error}"
+    },
+    "fetchModelsForm": {
+      "title": "Fetch AI Models",
+      "content": "Click the button below to fetch available AI models from the API.",
+      "button": "Fetch Models"
+    },
+    "errors": {
+      "journalNotFound": "Journal \"{name}\" not found."
     }
   }
 }
