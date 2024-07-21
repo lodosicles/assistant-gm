@@ -41,7 +41,7 @@ export class OpenWebUIAPI {
     async generateText(modelId, prompt) {
         console.log(`Generating text with model ID: ${modelId}`);
         try {
-            const response = await fetch(`${this.apiUrl}/api/v1/chat/completions`, {
+            const response = await fetch(`${this.apiUrl}/api/v1/chat`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
