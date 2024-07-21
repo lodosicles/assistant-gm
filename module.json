@@ -2,7 +2,7 @@
   "id": "assistant-gm",
   "title": "AssistantGM",
   "description": "Integrate AI language models into Foundry VTT to assist GMs with dynamic content generation",
-  "version": "1.0.0",
+  "version": "0.0.2",
   "compatibility": {
     "minimum": "10",
     "verified": "11",
@@ -18,7 +18,6 @@
   "esmodules": [
     "scripts/module.js"
   ],
-  "scripts": [],
   "styles": [
     "styles/assistant-gm.css"
   ],
@@ -52,9 +51,5 @@
     "requires": []
   },
   "flags": {},
-  "dependencies": [],
-  "library": false,
-  "templatePaths": [
-    "templates/settings.html"
-  ]
+  "dependencies": []
 }
