@@ -21,8 +21,3 @@ Hooks.on('renderSettingsConfig', (app, html, data) => {
         await AssistantGM.updateAvailableModels(app);
     });
 });
-
-// Expose the API
-Hooks.once('setup', () => {
-    game.modules.get('assistant-gm').api = AssistantGM;
-});
