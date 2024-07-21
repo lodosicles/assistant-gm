@@ -10,7 +10,7 @@ export class OpenWebUIAPI {
     async getModels() {
         console.log(`Fetching models from ${this.apiUrl}...`);
         try {
-            const response = await fetch(`${this.apiUrl}/api/v1/model`, {
+            const response = await fetch(`${this.apiUrl}/api/v1/models`, {
                 headers: {
                     'Authorization': `Bearer ${this.apiToken}`
                 }
