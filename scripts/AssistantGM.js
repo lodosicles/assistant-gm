@@ -80,7 +80,7 @@ export class AssistantGM {
                 return;
             }
 
-            const modelChoices = Object.fromEntries(models.map(model => [model, model]));
+            const modelChoices = Object.fromEntries(models.map(model => [model.id, model.name]));
             
             // Update the choices for the modelName setting
             const setting = game.settings.settings.get(`${this.ID}.modelName`);
@@ -88,8 +88,8 @@ export class AssistantGM {
             
             // If the current model is not in the list, set it to the first available model
             const currentModel = game.settings.get(this.ID, 'modelName');
-            if (!models.includes(currentModel) || currentModel === '') {
-                await game.settings.set(this.ID, 'modelName', models[0]);
+            if (!models.some(model => model.id === currentModel) || currentModel === '') {
+                await game.settings.set(this.ID, 'modelName', models[0].id);
             }
             
             // Refresh the settings form
@@ -105,7 +105,7 @@ export class AssistantGM {
 
     static async enrichAssistant(match, options) {
         const [, prompt, journalName] = match;
-        const model = game.settings.get(this.ID, 'modelName');
+        const modelId = game.settings.get(this.ID, 'modelName');
         
         let fullPrompt = prompt;
         if (journalName) {
@@ -118,7 +118,7 @@ export class AssistantGM {
         }
 
         try {
-            const generatedText = await this.api.generateText(model, fullPrompt);
+            const generatedText = await this.api.generateText(modelId, fullPrompt);
             const span = document.createElement('span');
             span.classList.add('assistant-generated-text');
             span.textContent = generatedText;
@@ -131,9 +131,9 @@ export class AssistantGM {
     }
 
     static async generateTextFromPrompt(prompt) {
-        const model = game.settings.get(this.ID, 'modelName');
+        const modelId = game.settings.get(this.ID, 'modelName');
         try {
-            return await this.api.generateText(model, prompt);
+            return await this.api.generateText(modelId, prompt);
         } catch (error) {
             console.error('Error generating text:', error);
             ui.notifications.error(`Failed to generate text: ${error.message}`);
