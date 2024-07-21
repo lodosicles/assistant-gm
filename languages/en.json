@@ -1,0 +1,18 @@
+{
+  "assistant-gm": {
+    "settings": {
+      "apiUrl": {
+        "name": "Open WebUI API URL",
+        "hint": "The URL of your Open WebUI API"
+      },
+      "apiToken": {
+        "name": "Open WebUI API Token",
+        "hint": "Your API token for authentication"
+      },
+      "modelName": {
+        "name": "AI Model",
+        "hint": "Select the AI model to use"
+      }
+    }
+  }
+}
