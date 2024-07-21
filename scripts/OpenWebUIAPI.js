@@ -10,7 +10,7 @@ export class OpenWebUIAPI {
     async getModels() {
         console.log(`Fetching models from ${this.apiUrl}...`);
         try {
-            const response = await fetch(`${this.apiUrl}/api/v1/models`, {
+            const response = await fetch(`${this.apiUrl}/api/v1/model`, {
                 headers: {
                     'Authorization': `Bearer ${this.apiToken}`
                 }
@@ -38,8 +38,8 @@ export class OpenWebUIAPI {
         }
     }
 
-    async generateText(model, prompt) {
-        console.log(`Generating text with model: ${model}`);
+    async generateText(modelId, prompt) {
+        console.log(`Generating text with model ID: ${modelId}`);
         try {
             const response = await fetch(`${this.apiUrl}/api/v1/generate`, {
                 method: 'POST',
@@ -48,7 +48,7 @@ export class OpenWebUIAPI {
                     'Authorization': `Bearer ${this.apiToken}`
                 },
                 body: JSON.stringify({
-                    model: model,
+                    model: modelId,
                     prompt: prompt,
                     max_new_tokens: 250,
                     preset: 'None',
