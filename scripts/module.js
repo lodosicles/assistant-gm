@@ -11,3 +11,6 @@ Hooks.once('ready', async function() {
     console.log('AssistantGM | Ready');
     await AssistantGM.ready();
 });
+
+// Add this line to make sure the module is loaded
+console.log('AssistantGM | Module loaded');
