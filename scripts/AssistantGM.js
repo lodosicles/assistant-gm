@@ -116,32 +116,34 @@ export class AssistantGM {
         }
     }
 
-    static async enrichAssistant(match, options) {
-        const [, prompt, journalName] = match;
-        const modelName = game.settings.get(this.ID, 'modelName');
-        
-        let fullPrompt = prompt;
-        if (journalName) {
-            const journal = game.journal.getName(journalName);
-            if (journal) {
-                fullPrompt += "\n\nJournal Content:\n" + journal.data.content;
-            } else {
-                console.warn(`Journal "${journalName}" not found.`);
-            }
-        }
-
-        try {
-            const generatedText = await this.api.generateText(modelName, fullPrompt);
-            const span = document.createElement('span');
-            span.classList.add('assistant-generated-text');
-            span.textContent = generatedText;
-            return span;
-        } catch (error) {
-            console.error('Error generating text:', error);
-            ui.notifications.error(`Failed to generate text: ${error.message}`);
-            return null;
+static async enrichAssistant(match, options) {
+    console.log('enrichAssistant called with match:', match);
+    const [, prompt, journalName] = match;
+    const modelName = game.settings.get(this.ID, 'modelName');
+    
+    let fullPrompt = prompt;
+    if (journalName) {
+        const journal = game.journal.getName(journalName);
+        if (journal) {
+            fullPrompt += "\n\nJournal Content:\n" + journal.data.content;
+        } else {
+            console.warn(`Journal "${journalName}" not found.`);
         }
     }
+
+    try {
+        const generatedText = await this.api.generateText(modelName, fullPrompt);
+        console.log('Generated text:', generatedText);
+        const span = document.createElement('span');
+        span.classList.add('assistant-generated-text');
+        span.innerHTML = generatedText.replace(/\n/g, '<br>');
+        return span;
+    } catch (error) {
+        console.error('Error generating text:', error);
+        ui.notifications.error(`Failed to generate text: ${error.message}`);
+        return null;
+    }
+}
 
     static async generateTextFromPrompt(prompt) {
         const modelName = game.settings.get(this.ID, 'modelName');
