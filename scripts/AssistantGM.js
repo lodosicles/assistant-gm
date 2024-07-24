@@ -160,7 +160,7 @@ class FetchModelsForm extends FormApplication {
         return mergeObject(super.defaultOptions, {
             id: 'fetch-models-form',
             title: 'Fetch AI Models',
-            template: 'templates/apps/form-application.html',
+            template: `modules/${AssistantGM.ID}/templates/fetch-models-form.html`,
             width: 300,
             height: 'auto'
         });
@@ -168,13 +168,9 @@ class FetchModelsForm extends FormApplication {
 
     getData() {
         return {
-            content: '<p>Click the button below to fetch available AI models from the API.</p>'
+            content: 'Click the button below to fetch available AI models from the API.',
+            submitText: 'Fetch Models'
         };
-    }
-
-    activateListeners(html) {
-        super.activateListeners(html);
-        html.find('button[type="submit"]').text('Fetch Models');
     }
 
     async _updateObject(event, formData) {
