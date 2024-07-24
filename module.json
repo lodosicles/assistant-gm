@@ -14,6 +14,9 @@
   "styles": [
     "styles/assistant-gm.css"
   ],
+  "templates": [
+    "templates/fetch-models-form.html"
+  ],
   "languages": [
     {
       "lang": "en",
