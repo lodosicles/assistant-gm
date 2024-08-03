@@ -130,29 +130,31 @@ export class AssistantGM {
                 console.warn(`Journal "${journalName}" not found.`);
             }
         }
-    
+
         const wrapperSpan = document.createElement('span');
         wrapperSpan.classList.add('assistant-wrapper');
         wrapperSpan.textContent = 'Generating...';
-    
+
         // Start the text generation process
         this.generateTextFromPromptStream(modelName, fullPrompt, (chunk) => {
             if (wrapperSpan.textContent === 'Generating...') {
                 wrapperSpan.textContent = '';
             }
             wrapperSpan.textContent += chunk;
-            // Trigger a re-render of the parent JournalSheet
-            if (this.object instanceof JournalSheet) {
-                this.object.render(false);
+
+            // Force an update of the journal sheet
+            const journalSheet = ui.windows[wrapperSpan.closest('.sheet').dataset.appid];
+            if (journalSheet && journalSheet instanceof JournalSheet) {
+                journalSheet.render(false);
             }
         }).catch(error => {
             wrapperSpan.textContent = 'Error generating text';
             console.error('Error generating text:', error);
         });
-    
+
         return wrapperSpan;
     }
-    
+
     static async generateTextFromPromptStream(modelName, prompt, onChunk) {
         try {
             await this.api.generateTextStream(modelName, prompt, onChunk);
