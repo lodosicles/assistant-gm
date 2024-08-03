@@ -17,7 +17,7 @@ Hooks.on('renderJournalSheet', (app, html, data) => {
     
     const button = $('<button type="button" class="assistant-gm-generate">Generate AI Content</button>');
     button.click(async () => {
-        const journalEntry = app.document;
+        const journalEntry = app.object;
         const promptInput = $('<input type="text" placeholder="Enter your prompt here">');
         const dialog = new Dialog({
             title: "Generate AI Content",
@@ -38,7 +38,8 @@ Hooks.on('renderJournalSheet', (app, html, data) => {
         dialog.render(true);
     });
     
-    html.find('.journal-header .header-actions').append(button);
+    html.find('.journal-header-actions').append(button);
+    console.log('AssistantGM | Button added to journal sheet');
 });
 
 console.log('AssistantGM | Module loaded');

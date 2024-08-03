@@ -121,8 +121,8 @@ export class AssistantGM {
             console.error('API not initialized');
             return '<span class="assistant-error">Error: API not initialized</span>';
         }
-
-        const [, prompt, journalName] = match;
+    
+        const [fullMatch, prompt, journalName] = match;
         const modelName = game.settings.get(this.ID, 'modelName');
         
         let fullPrompt = prompt;
@@ -134,11 +134,18 @@ export class AssistantGM {
                 console.warn(`Journal "${journalName}" not found.`);
             }
         }
-
+    
         try {
             console.log('Generating text with prompt:', fullPrompt);
             const generatedText = await this.api.generateText(modelName, fullPrompt);
             console.log('Generated text:', generatedText);
+    
+            // Update the journal entry content
+            if (options.journalEntry) {
+                const updatedContent = options.journalEntry.data.content.replace(fullMatch, generatedText);
+                await options.journalEntry.update({content: updatedContent});
+            }
+    
             return `<span class="assistant-generated-text">${generatedText.replace(/\n/g, '<br>')}</span>`;
         } catch (error) {
             console.error('Error generating text:', error);
@@ -163,9 +170,9 @@ export class AssistantGM {
             ui.notifications.error('API not initialized');
             return;
         }
-
+    
         const modelName = game.settings.get(this.ID, 'modelName');
-
+    
         try {
             ui.notifications.info('Generating content...');
             const generatedText = await this.api.generateText(modelName, prompt);
@@ -177,9 +184,15 @@ export class AssistantGM {
                     content: generatedText
                 }
             };
-
+    
             await journalEntry.createEmbeddedDocuments("JournalEntryPage", [newPage]);
             ui.notifications.success('New page added with generated content');
+            
+            // Force a re-render of the journal sheet
+            const sheet = journalEntry.sheet;
+            if (sheet && sheet.rendered) {
+                sheet.render(true);
+            }
         } catch (error) {
             console.error('Error generating text:', error);
             ui.notifications.error(`Failed to generate text: ${error.message}`);
