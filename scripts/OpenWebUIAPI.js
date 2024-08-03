@@ -51,26 +51,46 @@ export class OpenWebUIAPI {
 
             const reader = response.body.getReader();
             const decoder = new TextDecoder();
+            let buffer = '';
 
             while (true) {
                 const { done, value } = await reader.read();
                 if (done) break;
-                const chunk = decoder.decode(value, { stream: true });
-                const lines = chunk.split('\n');
-                for (const line of lines) {
-                    if (line.trim() !== '') {
-                        try {
-                            const parsed = JSON.parse(line);
-                            if (parsed.response) {
-                                onChunk(parsed.response);
+                
+                buffer += decoder.decode(value, { stream: true });
+                let boundary = buffer.lastIndexOf('\n');
+                
+                if (boundary !== -1) {
+                    let completeLines = buffer.substring(0, boundary);
+                    buffer = buffer.substring(boundary + 1);
+                    
+                    completeLines.split('\n').forEach(line => {
+                        if (line.trim() !== '') {
+                            try {
+                                const parsed = JSON.parse(line);
+                                if (parsed.response) {
+                                    onChunk(parsed.response);
+                                }
+                            } catch (e) {
+                                console.warn('Error parsing JSON:', e, 'Line:', line);
                             }
-                        } catch (e) {
-                            console.error('Error parsing JSON:', e);
-                            // Continue processing even if one chunk fails
                         }
-                    }
+                    });
                 }
             }
+
+            // Process any remaining data in the buffer
+            if (buffer.trim() !== '') {
+                try {
+                    const parsed = JSON.parse(buffer);
+                    if (parsed.response) {
+                        onChunk(parsed.response);
+                    }
+                } catch (e) {
+                    console.warn('Error parsing JSON at end of stream:', e, 'Buffer:', buffer);
+                }
+            }
+
         } catch (error) {
             console.error('Error in generateTextStream:', error);
             throw error;

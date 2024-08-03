@@ -131,44 +131,37 @@ export class AssistantGM {
                 console.warn(`Journal "${journalName}" not found.`);
             }
         }
-    
+
         const wrapperSpan = document.createElement('span');
         wrapperSpan.classList.add('assistant-wrapper');
         wrapperSpan.textContent = 'Generating...';
-    
-        // Start the text generation process
+
         this.generateTextFromPromptStream(modelName, fullPrompt, (chunk) => {
             if (wrapperSpan.textContent === 'Generating...') {
                 wrapperSpan.textContent = '';
             }
             wrapperSpan.textContent += chunk;
             
-            // Use Foundry's built-in methods to update content
             if (options.async) {
                 options.async(wrapperSpan);
             }
         }).catch(error => {
-            wrapperSpan.textContent = 'Error generating text';
+            wrapperSpan.textContent = 'Error generating text: ' + error.message;
             console.error('Error generating text:', error);
         });
-    
+
         return wrapperSpan;
     }
-    
+
     static async generateTextFromPromptStream(modelName, prompt, onChunk) {
-        try {
-            if (!this.api) {
-                console.error('API not initialized. Initializing now...');
-                this.initializeAPI();
-            }
-            if (!this.api || typeof this.api.generateTextStream !== 'function') {
-                throw new Error('API not properly initialized or generateTextStream method not found');
-            }
-            await this.api.generateTextStream(modelName, prompt, onChunk);
-        } catch (error) {
-            console.error('Error generating text:', error);
-            ui.notifications.error(`Failed to generate text: ${error.message}`);
+        if (!this.api) {
+            console.error('API not initialized. Initializing now...');
+            this.initializeAPI();
         }
+        if (!this.api || typeof this.api.generateTextStream !== 'function') {
+            throw new Error('API not properly initialized or generateTextStream method not found');
+        }
+        await this.api.generateTextStream(modelName, prompt, onChunk);
     }
 
 }
