@@ -27,7 +27,7 @@ export class AssistantGM {
             scope: 'world',
             config: true,
             type: String,
-            default: 'http://localhost:3000'
+            default: 'http://localhost:5932'
         });
 
         game.settings.register(this.ID, 'jwtToken', {
@@ -66,25 +66,24 @@ export class AssistantGM {
             enricher: this.enrichAssistant.bind(this)
         });
     }
-    
+
+    static initializeAPI() {
+        const apiUrl = game.settings.get(this.ID, 'apiUrl');
+        const jwtToken = game.settings.get(this.ID, 'jwtToken');
+        this.api = new OpenWebUIAPI(apiUrl, jwtToken);
+    }
+
     static async ready() {
         console.log('AssistantGM | Ready method called');
         try {
             this.initializeAPI();
+            console.log('AssistantGM | API initialized');
             await this.updateAvailableModels();
             console.log('AssistantGM | Available models updated');
         } catch (error) {
             console.error('AssistantGM | Error during ready method:', error);
         }
     }
-    
-    static initializeAPI() {
-        const apiUrl = game.settings.get(this.ID, 'apiUrl');
-        const jwtToken = game.settings.get(this.ID, 'jwtToken');
-        this.api = new OpenWebUIAPI(apiUrl, jwtToken);
-        console.log('AssistantGM | API initialized');
-    }
-
 
     static async updateAvailableModels() {
         console.log('Fetching available AI models...');
@@ -114,13 +113,6 @@ export class AssistantGM {
             console.error('Error fetching models:', error);
             ui.notifications.error(`Failed to fetch AI models: ${error.message}`);
         }
-    }
-
-    static registerTextEnricher() {
-        CONFIG.TextEditor.enrichers.push({
-            pattern: /@assistant\[([^\]]+)(?:#([^#]+)#)?\]/g,
-            enricher: this.enrichAssistant.bind(this)
-        });
     }
 
     static async enrichAssistant(match, options) {
@@ -155,45 +147,44 @@ export class AssistantGM {
         }
     }
 
-    static async generateTextFromPromptStream(modelName, prompt, placeholderId) {
-        if (!this.api) {
-            console.error('API not initialized. Initializing now...');
-            this.initializeAPI();
-        }
-        if (!this.api || typeof this.api.generateTextStream !== 'function') {
-            throw new Error('API not properly initialized or generateTextStream method not found');
-        }
-
-        let generatedText = '';
-
+    static async generateTextFromPrompt(prompt) {
+        const modelName = game.settings.get(this.ID, 'modelName');
         try {
-            await this.api.generateTextStream(modelName, prompt, (chunk) => {
-                generatedText += chunk;
-                this.updateJournalContent(placeholderId, generatedText);
-            });
+            return await this.api.generateText(modelName, prompt);
         } catch (error) {
             console.error('Error generating text:', error);
-            this.updateJournalContent(placeholderId, `Error generating text: ${error.message}`);
+            ui.notifications.error(`Failed to generate text: ${error.message}`);
+            return null;
         }
     }
 
-    static async updateJournalContent(placeholderId, content) {
-        const journalEntry = this.findJournalEntryByPlaceholderId(placeholderId);
-        if (!journalEntry) return;
+    static async generateAndAddPage(journalEntry, prompt) {
+        if (!this.api) {
+            ui.notifications.error('API not initialized');
+            return;
+        }
 
-        const updatedContent = journalEntry.content.replace(
-            new RegExp(`<span id="${placeholderId}"[^>]*>.*?</span>`),
-            `<span id="${placeholderId}" class="assistant-wrapper">${content}</span>`
-        );
+        const modelName = game.settings.get(this.ID, 'modelName');
 
-        await journalEntry.update({content: updatedContent});
+        try {
+            ui.notifications.info('Generating content...');
+            const generatedText = await this.api.generateText(modelName, prompt);
+            
+            const newPage = {
+                name: `AI Generated: ${prompt.substring(0, 20)}...`,
+                type: "text",
+                text: {
+                    content: generatedText
+                }
+            };
+
+            await journalEntry.createEmbeddedDocuments("JournalEntryPage", [newPage]);
+            ui.notifications.success('New page added with generated content');
+        } catch (error) {
+            console.error('Error generating text:', error);
+            ui.notifications.error(`Failed to generate text: ${error.message}`);
+        }
     }
-
-    static findJournalEntryByPlaceholderId(placeholderId) {
-        return game.journal.contents.find(je => je.content && je.content.includes(placeholderId));
-    }
-
-
 }
 
 class FetchModelsForm extends FormApplication {

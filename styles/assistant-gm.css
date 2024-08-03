@@ -89,3 +89,22 @@ select[name="assistant-gm.modelName"] {
     min-height: 20px;
 }
 
+/* styles/assistant-gm.css */
+
+.assistant-gm-generate {
+    background: #4CAF50;
+    color: white;
+    border: none;
+    padding: 5px 10px;
+    text-align: center;
+    text-decoration: none;
+    display: inline-block;
+    font-size: 14px;
+    margin: 4px 2px;
+    cursor: pointer;
+    border-radius: 4px;
+}
+
+.assistant-gm-generate:hover {
+    background: #45a049;
+}

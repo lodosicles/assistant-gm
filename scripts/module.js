@@ -14,21 +14,31 @@ Hooks.once('ready', async function() {
 
 Hooks.on('renderJournalSheet', (app, html, data) => {
     console.log('AssistantGM | Rendering Journal Sheet');
-    const content = html.find('.editor-content');
-    TextEditor.enrichHTML(content.html(), {async: true}).then(result => {
-        console.log('AssistantGM | Enriched content:', result);
-        content.html(result);
-    });
-
-    const button = $('<button>Generate AI Content</button>');
+    
+    const button = $('<button type="button" class="assistant-gm-generate">Generate AI Content</button>');
     button.click(async () => {
-        console.log('AssistantGM | Manually triggering content generation');
-        const content = html.find('.editor-content');
-        const enriched = await TextEditor.enrichHTML(content.html(), {async: true});
-        content.html(enriched);
+        const journalEntry = app.document;
+        const promptInput = $('<input type="text" placeholder="Enter your prompt here">');
+        const dialog = new Dialog({
+            title: "Generate AI Content",
+            content: promptInput[0].outerHTML,
+            buttons: {
+                generate: {
+                    label: "Generate",
+                    callback: async (html) => {
+                        const prompt = html.find('input').val();
+                        await AssistantGM.generateAndAddPage(journalEntry, prompt);
+                    }
+                },
+                cancel: {
+                    label: "Cancel"
+                }
+            }
+        });
+        dialog.render(true);
     });
-    html.find('.editor-content').before(button);
+    
+    html.find('.journal-header .header-actions').append(button);
 });
 
-// Add this line to make sure the module is loaded
 console.log('AssistantGM | Module loaded');
