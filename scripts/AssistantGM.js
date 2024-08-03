@@ -71,6 +71,7 @@ export class AssistantGM {
         const apiUrl = game.settings.get(this.ID, 'apiUrl');
         const jwtToken = game.settings.get(this.ID, 'jwtToken');
         this.api = new OpenWebUIAPI(apiUrl, jwtToken);
+        console.log('AssistantGM | API initialized');
     }
 
     static async ready() {

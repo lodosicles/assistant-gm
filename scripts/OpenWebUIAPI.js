@@ -6,6 +6,29 @@ export class OpenWebUIAPI {
         this.token = jwtToken;
     }
 
+    async getModels() {
+        console.log(`Fetching models from ${this.apiUrl}...`);
+        try {
+            const response = await fetch(`${this.apiUrl}/ollama/api/tags`, {
+                headers: {
+                    'Authorization': `Bearer ${this.token}`
+                }
+            });
+            if (!response.ok) {
+                throw new Error(`HTTP error! status: ${response.status}`);
+            }
+            const data = await response.json();
+            console.log('Fetched models:', data);
+            if (!data.models || !Array.isArray(data.models)) {
+                throw new Error('Invalid response format: models array not found');
+            }
+            return data.models;
+        } catch (error) {
+            console.error('Error in getModels:', error);
+            throw new Error(`Failed to fetch models: ${error.message}`);
+        }
+    }
+
     async generateTextStream(modelId, prompt, onChunk) {
         console.log(`Generating text stream with model ID: ${modelId}`);
         try {
