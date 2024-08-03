@@ -132,28 +132,16 @@ export class AssistantGM {
             }
         }
 
-        const wrapperSpan = document.createElement('span');
-        wrapperSpan.classList.add('assistant-wrapper');
-        wrapperSpan.textContent = 'Generating...';
+        const placeholderId = randomID();
+        const placeholder = `<span id="${placeholderId}" class="assistant-wrapper">Generating...</span>`;
 
-        this.generateTextFromPromptStream(modelName, fullPrompt, (chunk) => {
-            if (wrapperSpan.textContent === 'Generating...') {
-                wrapperSpan.textContent = '';
-            }
-            wrapperSpan.textContent += chunk;
-            
-            if (options.async) {
-                options.async(wrapperSpan);
-            }
-        }).catch(error => {
-            wrapperSpan.textContent = 'Error generating text: ' + error.message;
-            console.error('Error generating text:', error);
-        });
+        // Start the text generation process
+        this.generateTextFromPromptStream(modelName, fullPrompt, placeholderId);
 
-        return wrapperSpan;
+        return placeholder;
     }
 
-    static async generateTextFromPromptStream(modelName, prompt, onChunk) {
+    static async generateTextFromPromptStream(modelName, prompt, placeholderId) {
         if (!this.api) {
             console.error('API not initialized. Initializing now...');
             this.initializeAPI();
@@ -161,8 +149,36 @@ export class AssistantGM {
         if (!this.api || typeof this.api.generateTextStream !== 'function') {
             throw new Error('API not properly initialized or generateTextStream method not found');
         }
-        await this.api.generateTextStream(modelName, prompt, onChunk);
+
+        let generatedText = '';
+
+        try {
+            await this.api.generateTextStream(modelName, prompt, (chunk) => {
+                generatedText += chunk;
+                this.updateJournalContent(placeholderId, generatedText);
+            });
+        } catch (error) {
+            console.error('Error generating text:', error);
+            this.updateJournalContent(placeholderId, `Error generating text: ${error.message}`);
+        }
     }
+
+    static async updateJournalContent(placeholderId, content) {
+        const journalEntry = this.findJournalEntryByPlaceholderId(placeholderId);
+        if (!journalEntry) return;
+
+        const updatedContent = journalEntry.data.content.replace(
+            new RegExp(`<span id="${placeholderId}"[^>]*>.*?</span>`),
+            `<span id="${placeholderId}" class="assistant-wrapper">${content}</span>`
+        );
+
+        await journalEntry.update({content: updatedContent});
+    }
+
+    static findJournalEntryByPlaceholderId(placeholderId) {
+        return game.journal.contents.find(je => je.data.content.includes(placeholderId));
+    }
+
 
 }
 
