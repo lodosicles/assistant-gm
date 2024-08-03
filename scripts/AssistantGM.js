@@ -13,6 +13,8 @@ export class AssistantGM {
         try {
             this.registerSettings();
             console.log('AssistantGM | Settings registered');
+            this.registerTextEnricher();
+            console.log('AssistantGM | Text enricher registered');
         } catch (error) {
             console.error('AssistantGM | Error during initialization:', error);
         }
@@ -25,7 +27,7 @@ export class AssistantGM {
             scope: 'world',
             config: true,
             type: String,
-            default: 'http://localhost:5932'
+            default: 'http://localhost:3000'
         });
 
         game.settings.register(this.ID, 'jwtToken', {
@@ -114,28 +116,43 @@ export class AssistantGM {
         }
     }
 
+    static registerTextEnricher() {
+        CONFIG.TextEditor.enrichers.push({
+            pattern: /@assistant\[([^\]]+)(?:#([^#]+)#)?\]/g,
+            enricher: this.enrichAssistant.bind(this)
+        });
+    }
+
     static async enrichAssistant(match, options) {
-        console.log('enrichAssistant called with match:', match);
-        const [fullMatch, prompt, journalName] = match;
+        console.log('Enriching assistant content:', match);
+        if (!this.api) {
+            console.error('API not initialized');
+            return '<span class="assistant-error">Error: API not initialized</span>';
+        }
+
+        const [, prompt, journalName] = match;
         const modelName = game.settings.get(this.ID, 'modelName');
         
         let fullPrompt = prompt;
         if (journalName) {
             const journal = game.journal.getName(journalName);
             if (journal) {
-                fullPrompt += "\n\nJournal Content:\n" + journal.content;
+                fullPrompt += "\n\nJournal Content:\n" + journal.data.content;
             } else {
                 console.warn(`Journal "${journalName}" not found.`);
             }
         }
 
-        const placeholderId = randomID();
-        const placeholder = `<span id="${placeholderId}" class="assistant-wrapper">Generating...</span>`;
-
-        // Start the text generation process
-        this.generateTextFromPromptStream(modelName, fullPrompt, placeholderId);
-
-        return placeholder;
+        try {
+            console.log('Generating text with prompt:', fullPrompt);
+            const generatedText = await this.api.generateText(modelName, fullPrompt);
+            console.log('Generated text:', generatedText);
+            return `<span class="assistant-generated-text">${generatedText.replace(/\n/g, '<br>')}</span>`;
+        } catch (error) {
+            console.error('Error generating text:', error);
+            ui.notifications.error(`Failed to generate text: ${error.message}`);
+            return `<span class="assistant-error">Error: ${error.message}</span>`;
+        }
     }
 
     static async generateTextFromPromptStream(modelName, prompt, placeholderId) {
