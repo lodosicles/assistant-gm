@@ -66,6 +66,7 @@ export class OpenWebUIAPI {
                             }
                         } catch (e) {
                             console.error('Error parsing JSON:', e);
+                            // Continue processing even if one chunk fails
                         }
                     }
                 }
