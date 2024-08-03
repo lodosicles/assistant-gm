@@ -37,15 +37,27 @@ select[name="assistant-gm.modelName"] {
     background-color: #5a5a5a;
 }
 
+.assistant-wrapper {
+    display: inline-block;
+    margin: 10px 0;
+}
+
 .assistant-loading {
     display: inline-block;
-    width: 20px;
-    height: 20px;
-    border: 2px solid #f3f3f3;
-    border-top: 2px solid #3498db;
-    border-radius: 50%;
-    animation: spin 1s linear infinite;
-    margin-left: 10px;
+    padding: 5px 10px;
+    background-color: #f0f0f0;
+    border-left: 3px solid #4a4a4a;
+    font-style: italic;
+}
+
+.assistant-generated-text {
+    display: block;
+    padding: 10px;
+    background-color: #f0f0f0;
+    border-left: 3px solid #4a4a4a;
+    font-style: italic;
+    color: #333333;
+    line-height: 1.6;
 }
 
 @keyframes spin {

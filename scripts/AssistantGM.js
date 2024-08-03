@@ -116,37 +116,52 @@ export class AssistantGM {
         }
     }
 
-static async enrichAssistant(match, options) {
-    console.log('enrichAssistant called with match:', match);
-    const [, prompt, journalName] = match;
-    const modelName = game.settings.get(this.ID, 'modelName');
-    
-    let fullPrompt = prompt;
-    if (journalName) {
-        const journal = game.journal.getName(journalName);
-        if (journal) {
-            fullPrompt += "\n\nJournal Content:\n" + journal.data.content;
-        } else {
-            console.warn(`Journal "${journalName}" not found.`);
-        }
-    }
-
-    try {
-        const generatedText = await this.api.generateText(modelName, fullPrompt);
-        console.log('Generated text:', generatedText);
-        const span = document.createElement('span');
-        span.classList.add('assistant-generated-text');
-        span.innerHTML = generatedText.replace(/\n/g, '<br>');
-        return span;
-    } catch (error) {
-        console.error('Error generating text:', error);
-        ui.notifications.error(`Failed to generate text: ${error.message}`);
-        return null;
-    }
-}
-
-    static async generateTextFromPrompt(prompt) {
+    static async enrichAssistant(match, options) {
+        console.log('enrichAssistant called with match:', match);
+        const [fullMatch, prompt, journalName] = match;
         const modelName = game.settings.get(this.ID, 'modelName');
+        
+        let fullPrompt = prompt;
+        if (journalName) {
+            const journal = game.journal.getName(journalName);
+            if (journal) {
+                fullPrompt += "\n\nJournal Content:\n" + journal.data.content;
+            } else {
+                console.warn(`Journal "${journalName}" not found.`);
+            }
+        }
+    
+        const loadingSpan = document.createElement('span');
+        loadingSpan.classList.add('assistant-loading');
+        loadingSpan.textContent = 'Generating...';
+    
+        const contentSpan = document.createElement('span');
+        contentSpan.classList.add('assistant-generated-text');
+        contentSpan.style.display = 'none';
+    
+        const wrapperSpan = document.createElement('span');
+        wrapperSpan.classList.add('assistant-wrapper');
+        wrapperSpan.appendChild(loadingSpan);
+        wrapperSpan.appendChild(contentSpan);
+    
+        // Start the text generation process
+        this.generateTextFromPrompt(modelName, fullPrompt).then(generatedText => {
+            loadingSpan.style.display = 'none';
+            contentSpan.style.display = 'block';
+            contentSpan.innerHTML = generatedText.replace(/\n/g, '<br>');
+            
+            // Trigger a custom event to notify that the content has been updated
+            const event = new CustomEvent('assistantContentUpdated', { detail: { element: wrapperSpan } });
+            document.dispatchEvent(event);
+        }).catch(error => {
+            loadingSpan.textContent = 'Error generating text';
+            console.error('Error generating text:', error);
+        });
+    
+        return wrapperSpan;
+    }
+    
+    static async generateTextFromPrompt(modelName, prompt) {
         try {
             return await this.api.generateText(modelName, prompt);
         } catch (error) {
@@ -155,6 +170,7 @@ static async enrichAssistant(match, options) {
             return null;
         }
     }
+
 }
 
 class FetchModelsForm extends FormApplication {
