@@ -13,8 +13,6 @@ export class AssistantGM {
         try {
             this.registerSettings();
             console.log('AssistantGM | Settings registered');
-            this.registerTextEnricher();
-            console.log('AssistantGM | Text enricher registered');
         } catch (error) {
             console.error('AssistantGM | Error during initialization:', error);
         }
@@ -66,24 +64,23 @@ export class AssistantGM {
             enricher: this.enrichAssistant.bind(this)
         });
     }
-
-    static initializeAPI() {
-        const apiUrl = game.settings.get(this.ID, 'apiUrl');
-        const jwtToken = game.settings.get(this.ID, 'jwtToken');
-        this.api = new OpenWebUIAPI(apiUrl, jwtToken);
-        console.log('AssistantGM | API initialized');
-    }
-
+    
     static async ready() {
         console.log('AssistantGM | Ready method called');
         try {
             this.initializeAPI();
-            console.log('AssistantGM | API initialized');
             await this.updateAvailableModels();
             console.log('AssistantGM | Available models updated');
         } catch (error) {
             console.error('AssistantGM | Error during ready method:', error);
         }
+    }
+    
+    static initializeAPI() {
+        const apiUrl = game.settings.get(this.ID, 'apiUrl');
+        const jwtToken = game.settings.get(this.ID, 'jwtToken');
+        this.api = new OpenWebUIAPI(apiUrl, jwtToken);
+        console.log('AssistantGM | API initialized');
     }
 
 
@@ -126,7 +123,7 @@ export class AssistantGM {
         if (journalName) {
             const journal = game.journal.getName(journalName);
             if (journal) {
-                fullPrompt += "\n\nJournal Content:\n" + journal.data.content;
+                fullPrompt += "\n\nJournal Content:\n" + journal.content;
             } else {
                 console.warn(`Journal "${journalName}" not found.`);
             }
@@ -167,7 +164,7 @@ export class AssistantGM {
         const journalEntry = this.findJournalEntryByPlaceholderId(placeholderId);
         if (!journalEntry) return;
 
-        const updatedContent = journalEntry.data.content.replace(
+        const updatedContent = journalEntry.content.replace(
             new RegExp(`<span id="${placeholderId}"[^>]*>.*?</span>`),
             `<span id="${placeholderId}" class="assistant-wrapper">${content}</span>`
         );
@@ -176,7 +173,7 @@ export class AssistantGM {
     }
 
     static findJournalEntryByPlaceholderId(placeholderId) {
-        return game.journal.contents.find(je => je.data.content.includes(placeholderId));
+        return game.journal.contents.find(je => je.content && je.content.includes(placeholderId));
     }
 
 
