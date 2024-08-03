@@ -131,43 +131,34 @@ export class AssistantGM {
             }
         }
     
-        const loadingSpan = document.createElement('span');
-        loadingSpan.classList.add('assistant-loading');
-        loadingSpan.textContent = 'Generating...';
-    
-        const contentSpan = document.createElement('span');
-        contentSpan.classList.add('assistant-generated-text');
-        contentSpan.style.display = 'none';
-    
         const wrapperSpan = document.createElement('span');
         wrapperSpan.classList.add('assistant-wrapper');
-        wrapperSpan.appendChild(loadingSpan);
-        wrapperSpan.appendChild(contentSpan);
+        wrapperSpan.textContent = 'Generating...';
     
         // Start the text generation process
-        this.generateTextFromPrompt(modelName, fullPrompt).then(generatedText => {
-            loadingSpan.style.display = 'none';
-            contentSpan.style.display = 'block';
-            contentSpan.innerHTML = generatedText.replace(/\n/g, '<br>');
-            
-            // Trigger a custom event to notify that the content has been updated
-            const event = new CustomEvent('assistantContentUpdated', { detail: { element: wrapperSpan } });
-            document.dispatchEvent(event);
+        this.generateTextFromPromptStream(modelName, fullPrompt, (chunk) => {
+            if (wrapperSpan.textContent === 'Generating...') {
+                wrapperSpan.textContent = '';
+            }
+            wrapperSpan.textContent += chunk;
+            // Trigger a re-render of the parent JournalSheet
+            if (this.object instanceof JournalSheet) {
+                this.object.render(false);
+            }
         }).catch(error => {
-            loadingSpan.textContent = 'Error generating text';
+            wrapperSpan.textContent = 'Error generating text';
             console.error('Error generating text:', error);
         });
     
         return wrapperSpan;
     }
     
-    static async generateTextFromPrompt(modelName, prompt) {
+    static async generateTextFromPromptStream(modelName, prompt, onChunk) {
         try {
-            return await this.api.generateText(modelName, prompt);
+            await this.api.generateTextStream(modelName, prompt, onChunk);
         } catch (error) {
             console.error('Error generating text:', error);
             ui.notifications.error(`Failed to generate text: ${error.message}`);
-            return null;
         }
     }
 
