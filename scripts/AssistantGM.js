@@ -110,7 +110,7 @@ export class AssistantGM {
         if ($('#assistant-gm-drawer').length) {
             return; // Drawer already exists, don't create another one
         }
-
+    
         const drawer = $(`
             <div id="assistant-gm-drawer" class="assistant-gm-drawer">
                 <div class="assistant-gm-handle">AI</div>
@@ -124,13 +124,13 @@ export class AssistantGM {
                 </div>
             </div>
         `);
-
+    
         $('body').append(drawer);
-
+    
         const drawerElement = $('#assistant-gm-drawer');
         const handle = $('.assistant-gm-handle');
         const content = $('.assistant-gm-content');
-        const journalEntriesField = $('#assistant-gm-journal-entries')[0];
+        const journalEntriesField = $('#assistant-gm-journal-entries');
 
         let isDragging = false;
         let startY, startX, startDrawerHeight, startDrawerLeft;
@@ -195,21 +195,55 @@ export class AssistantGM {
             }
         });
 
-        // Set up the drop target
-        const dropTarget = new DragDrop({
-            dropSelector: "#assistant-gm-journal-entries",
-            callbacks: {
-                drop: this._onDrop.bind(this)
+        // Set up drag and drop for journal entries
+        journalEntriesField.on('dragover', (event) => {
+            event.preventDefault();
+            event.stopPropagation();
+            journalEntriesField.addClass('dragover');
+        });
+
+        journalEntriesField.on('dragleave', (event) => {
+            event.preventDefault();
+            event.stopPropagation();
+            journalEntriesField.removeClass('dragover');
+        });
+
+        journalEntriesField.on('drop', (event) => {
+            event.preventDefault();
+            event.stopPropagation();
+            journalEntriesField.removeClass('dragover');
+
+            // Get the dropped data
+            let data;
+            try {
+                data = JSON.parse(event.originalEvent.dataTransfer.getData('text/plain'));
+            } catch (err) {
+                console.error("Failed to parse drag data", err);
+                return;
+            }
+
+            // Check if it's a journal entry
+            if (data.type === 'JournalEntry') {
+                let journal = game.journal.get(data.id);
+                if (journal) {
+                    // Create a new entry element
+                    let entryElement = $(`<div class="journal-entry-item" data-journal-id="${data.id}">${journal.name} <span class="remove-entry">×</span></div>`);
+                    
+                    // Append the new entry
+                    journalEntriesField.append(entryElement);
+
+                    // Clear the placeholder text if it exists
+                    journalEntriesField.find('p').remove();
+                }
             }
         });
-        dropTarget.bind(journalEntriesField);
 
         // Remove journal entry when clicking the remove button
-        $(journalEntriesField).on('click', '.remove-entry', function() {
+        journalEntriesField.on('click', '.remove-entry', function() {
             $(this).parent().remove();
             // If no entries left, add back the placeholder text
-            if ($('.journal-entry-item', journalEntriesField).length === 0) {
-                $(journalEntriesField).append('<p>Drag and drop journal entries here for context</p>');
+            if (journalEntriesField.find('.journal-entry-item').length === 0) {
+                journalEntriesField.append('<p>Drag and drop journal entries here for context</p>');
             }
         });
 
@@ -223,7 +257,7 @@ export class AssistantGM {
                 
                 // Gather journal entry content
                 let contextContent = '';
-                $('.journal-entry-item', journalEntriesField).each(function() {
+                journalEntriesField.find('.journal-entry-item').each(function() {
                     const journalId = $(this).data('journalId');
                     const journal = game.journal.get(journalId);
                     if (journal) {
@@ -243,44 +277,6 @@ export class AssistantGM {
                 console.error('Error generating text:', error);
                 output.val(`Error: ${error.message}`);
             }
-        });
-    }
-
-    static _onDrop(event) {
-        event.preventDefault();
-        
-        // Get the dropped data
-        let data;
-        try {
-            data = JSON.parse(event.dataTransfer.getData('text/plain'));
-        } catch (err) {
-            console.error("Failed to parse drag data", err);
-            return;
-        }
-
-        // Check if it's a journal entry
-        if (data.type === 'JournalEntry') {
-            let journal = game.journal.get(data.id);
-            if (journal) {
-                // Create a new entry element
-                let entryElement = $(`<div class="journal-entry-item" data-journal-id="${data.id}">${journal.name} <span class="remove-entry">×</span></div>`);
-                
-                // Append the new entry
-                $('#assistant-gm-journal-entries').append(entryElement);
-
-                // Clear the placeholder text if it exists
-                $('#assistant-gm-journal-entries p').remove();
-            }
-        }
-    }
-
-    static get defaultOptions() {
-        return mergeObject(super.defaultOptions, {
-            classes: ["assistant-gm"],
-            template: `modules/${this.ID}/templates/assistant-gm.html`,
-            width: 300,
-            height: "auto",
-            resizable: false,
         });
     }
 }

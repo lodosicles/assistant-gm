@@ -50,23 +50,9 @@
 }
 
 .assistant-gm-journal-entries {
-    border: 1px solid #ccc;
-    min-height: 50px;
-    padding: 5px;
-    margin-top: 10px;
-    background-color: #f9f9f9;
-}
-
-.assistant-gm-journal-entries p {
-    color: #888;
-    text-align: center;
-    margin: 0;
-}
-
-.assistant-gm-journal-entries {
-    min-height: 50px;
     border: 2px dashed #ccc;
     padding: 10px;
+    min-height: 50px;
     margin-top: 10px;
 }
 
@@ -76,11 +62,11 @@
 }
 
 .journal-entry-item {
-    background-color: #e0e0e0;
+    background-color: #f0f0f0;
     border: 1px solid #ccc;
     border-radius: 3px;
-    padding: 2px 5px;
-    margin: 2px 0;
+    padding: 5px;
+    margin: 5px 0;
     display: flex;
     justify-content: space-between;
     align-items: center;
