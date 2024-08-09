@@ -114,7 +114,6 @@ export class AssistantGM {
         const drawer = $(`
             <div id="assistant-gm-drawer" class="assistant-gm-drawer">
                 <div class="assistant-gm-handle">Assistant GM</div>
-                <div class="assistant-gm-resize-handle"></div>
                 <div class="assistant-gm-content">
                     <textarea id="assistant-gm-prompt" placeholder="Enter your prompt here"></textarea>
                     <button id="assistant-gm-submit">Generate</button>
@@ -127,19 +126,16 @@ export class AssistantGM {
     
         const drawerElement = $('#assistant-gm-drawer');
         const handle = $('.assistant-gm-handle');
-        const resizeHandle = $('.assistant-gm-resize-handle');
+        const content = $('.assistant-gm-content');
     
         let isDragging = false;
         let startY;
-        let startHeight;
-        let startDrawerBottom;
+        let startDrawerHeight;
     
-        // Handle drawer opening/closing and resizing
-        handle.add(resizeHandle).on('mousedown', (e) => {
+        handle.on('mousedown', (e) => {
             isDragging = true;
             startY = e.clientY;
-            startDrawerBottom = parseInt(drawerElement.css('bottom'));
-            startHeight = drawerElement.height();
+            startDrawerHeight = drawerElement.height();
             e.preventDefault();
         });
     
@@ -147,28 +143,20 @@ export class AssistantGM {
             if (!isDragging) return;
     
             const deltaY = startY - e.clientY;
+            let newHeight = startDrawerHeight + deltaY;
+            newHeight = Math.max(newHeight, handle.height()); // Minimum height is handle height
+            newHeight = Math.min(newHeight, window.innerHeight - handle.height()); // Maximum height
     
-            if ($(e.target).is(handle)) {
-                // Opening/closing the drawer
-                let newBottom = startDrawerBottom + deltaY;
-                newBottom = Math.max(newBottom, -startHeight + handle.height());
-                drawerElement.css('bottom', `${newBottom}px`);
-            } else if ($(e.target).is(resizeHandle)) {
-                // Resizing the drawer
-                let newHeight = startHeight + deltaY;
-                newHeight = Math.max(newHeight, 100); // Minimum height
-                drawerElement.height(newHeight);
-            }
+            drawerElement.height(newHeight);
+            content.toggle(newHeight > handle.height());
         });
     
         $(document).on('mouseup', () => {
             if (isDragging) {
                 isDragging = false;
-                const currentBottom = parseInt(drawerElement.css('bottom'));
-                if (currentBottom < -drawerElement.height() / 2) {
-                    drawerElement.css('bottom', `${-drawerElement.height() + handle.height()}px`); // Close
-                } else {
-                    drawerElement.css('bottom', '0px'); // Open
+                if (drawerElement.height() <= handle.height()) {
+                    drawerElement.height(handle.height());
+                    content.hide();
                 }
             }
         });

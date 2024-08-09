@@ -1,49 +1,38 @@
 .assistant-gm-drawer {
     position: fixed;
-    bottom: -270px; /* Start hidden, showing only the handle */
-    left: 0;
-    right: 0;
-    height: 300px; /* Default height */
+    bottom: 0;
+    left: 20px; /* Offset from the left edge */
+    width: 300px; /* Fixed width */
+    height: 30px; /* Start with only the handle visible */
     background: #f0f0f0;
-    border-top: 1px solid #ccc;
-    transition: bottom 0.3s ease-out;
+    border: 1px solid #ccc;
+    border-bottom: none;
+    border-top-left-radius: 5px;
+    border-top-right-radius: 5px;
+    transition: height 0.3s ease-out;
     z-index: 100;
 }
 
 .assistant-gm-handle {
-    position: absolute;
-    top: -30px;
-    left: 0;
-    right: 0;
     height: 30px;
     background: #e0e0e0;
-    border-top: 1px solid #ccc;
-    border-top-left-radius: 5px;
-    border-top-right-radius: 5px;
+    border-bottom: 1px solid #ccc;
     cursor: ns-resize;
     text-align: center;
     line-height: 30px;
 }
 
-.assistant-gm-resize-handle {
-    position: absolute;
-    top: 0;
-    left: 0;
-    right: 0;
-    height: 5px;
-    cursor: ns-resize;
-}
-
 .assistant-gm-content {
+    display: none;
     padding: 10px;
-    height: calc(100% - 20px);
-    display: flex;
-    flex-direction: column;
+    height: calc(100% - 40px); /* Account for handle and padding */
+    overflow-y: auto;
 }
 
 #assistant-gm-prompt, #assistant-gm-output {
     width: 100%;
     margin-bottom: 10px;
+    resize: vertical;
 }
 
 #assistant-gm-prompt {
@@ -51,9 +40,10 @@
 }
 
 #assistant-gm-output {
-    flex-grow: 1;
+    height: 150px;
 }
 
 #assistant-gm-submit {
-    align-self: flex-start;
+    display: block;
+    margin-bottom: 10px;
 }
