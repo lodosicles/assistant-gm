@@ -69,8 +69,40 @@ export class AssistantGM {
             console.log('AssistantGM | API initialized');
             await this.updateAvailableModels();
             console.log('AssistantGM | Available models updated');
+            this.createDrawer();
+            console.log('AssistantGM | Drawer created');
         } catch (error) {
             console.error('AssistantGM | Error during ready method:', error);
+        }
+    }
+
+    static async updateAvailableModels() {
+        console.log('Fetching available AI models...');
+        try {
+            const models = await this.api.getModels();
+            console.log('Fetched models:', models);
+            
+            if (models.length === 0) {
+                ui.notifications.error('No AI models found. Check your API URL and JWT token.');
+                return;
+            }
+
+            const modelChoices = Object.fromEntries(models.map(model => [model.name, model.name]));
+            
+            // Update the choices for the modelName setting
+            const setting = game.settings.settings.get(`${this.ID}.modelName`);
+            setting.choices = modelChoices;
+            
+            // If the current model is not in the list, set it to the first available model
+            const currentModel = game.settings.get(this.ID, 'modelName');
+            if (!models.some(model => model.name === currentModel) || currentModel === '') {
+                await game.settings.set(this.ID, 'modelName', models[0].name);
+            }
+            
+            ui.notifications.info('AI models updated successfully');
+        } catch (error) {
+            console.error('Error fetching models:', error);
+            ui.notifications.error(`Failed to fetch AI models: ${error.message}`);
         }
     }
 
@@ -81,7 +113,7 @@ export class AssistantGM {
                 <div class="assistant-gm-content">
                     <textarea id="assistant-gm-prompt" placeholder="Enter your prompt here"></textarea>
                     <button id="assistant-gm-submit">Generate</button>
-                    <div id="assistant-gm-output"></div>
+                    <textarea id="assistant-gm-output" readonly></textarea>
                 </div>
             </div>
         `);
@@ -122,131 +154,22 @@ export class AssistantGM {
         $('#assistant-gm-submit').click(async () => {
             const prompt = $('#assistant-gm-prompt').val();
             const output = $('#assistant-gm-output');
-            output.html('<p>Generating...</p>');
+            output.val('Generating...');
 
             try {
                 const modelName = game.settings.get(this.ID, 'modelName');
                 const generatedText = await this.api.generateText(modelName, prompt);
-                const formattedContent = this.formatText(generatedText);
                 
-                // Create a new ProseMirror-based editor
-                const editor = new ProseMirrorEditor({
-                    parent: output[0],
-                    target: output[0],
-                    content: formattedContent,
-                    editable: false
-                });
-
-                editor.render();
+                // Display the raw text output
+                output.val(generatedText);
 
             } catch (error) {
                 console.error('Error generating text:', error);
-                output.html(`<p>Error: ${error.message}</p>`);
+                output.val(`Error: ${error.message}`);
             }
         });
     }
-
-    static formatText(text) {
-        // Convert markdown-like syntax to HTML
-        return text
-            .replace(/^# (.+)$/gm, '<h1>$1</h1>')
-            .replace(/^## (.+)$/gm, '<h2>$1</h2>')
-            .replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>')
-            .replace(/\*(.+?)\*/g, '<em>$1</em>')
-            .replace(/^- (.+)$/gm, '<ul><li>$1</li></ul>')
-            .replace(/\n\n/g, '</p><p>')
-            .replace(/^(.+)$/gm, '<p>$1</p>');
-    }
-
-    static convertToProseMirror(text) {
-        const lines = text.split('\n');
-        const doc = {type: "doc", content: []};
-        let currentList = null;
-
-        for (const line of lines) {
-            if (line.startsWith('# ')) {
-                doc.content.push({type: "heading", attrs: {level: 1}, content: [{type: "text", text: line.slice(2)}]});
-            } else if (line.startsWith('## ')) {
-                doc.content.push({type: "heading", attrs: {level: 2}, content: [{type: "text", text: line.slice(3)}]});
-            } else if (line.startsWith('- ')) {
-                if (!currentList || currentList.type !== "bullet_list") {
-                    currentList = {type: "bullet_list", content: []};
-                    doc.content.push(currentList);
-                }
-                currentList.content.push({type: "list_item", content: [{type: "paragraph", content: this.parseInline(line.slice(2))}]});
-            } else if (line.trim() === '') {
-                doc.content.push({type: "paragraph"});
-                currentList = null;
-            } else {
-                doc.content.push({type: "paragraph", content: this.parseInline(line)});
-                currentList = null;
-            }
-        }
-
-        return doc;
-    }
-
-    static parseInline(text) {
-        const content = [];
-        let currentText = '';
-        let bold = false;
-        let italic = false;
-
-        for (let i = 0; i < text.length; i++) {
-            if (text[i] === '*' && text[i+1] === '*') {
-                if (currentText) content.push({type: "text", text: currentText, marks: bold ? [{type: "strong"}] : []});
-                currentText = '';
-                bold = !bold;
-                i++;
-            } else if (text[i] === '*') {
-                if (currentText) content.push({type: "text", text: currentText, marks: italic ? [{type: "em"}] : []});
-                currentText = '';
-                italic = !italic;
-            } else {
-                currentText += text[i];
-            }
-        }
-
-        if (currentText) content.push({type: "text", text: currentText, marks: []});
-
-        return content;
-    }
-
 }
-
-class ProseMirrorEditor extends HTMLElement {
-    constructor(options = {}) {
-        super();
-        this.options = foundry.utils.mergeObject({
-            content: "",
-            editable: true
-        }, options);
-    }
-
-    connectedCallback() {
-        this.render();
-    }
-
-    render() {
-        const editorElement = document.createElement("div");
-        editorElement.classList.add("editor-content");
-        editorElement.innerHTML = this.options.content;
-        
-        if (!this.options.editable) {
-            editorElement.setAttribute("contenteditable", "false");
-        }
-
-        this.innerHTML = "";
-        this.appendChild(editorElement);
-
-        if (this.options.editable) {
-            // If editable, you might want to add more ProseMirror setup here
-            // For now, we're just using it as a display container
-        }
-    }
-}
-
-customElements.define("prosemirror-editor", ProseMirrorEditor);
 
 class FetchModelsForm extends FormApplication {
     static get defaultOptions() {
