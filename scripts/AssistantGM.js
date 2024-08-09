@@ -88,6 +88,37 @@ export class AssistantGM {
 
         $('body').append(drawer);
 
+        const handle = $('.assistant-gm-handle');
+        const drawerElement = $('#assistant-gm-drawer');
+
+        // Make the handle draggable
+        handle.css('cursor', 'move');
+        handle.on('mousedown', (e) => {
+            e.preventDefault();
+            
+            const startX = e.pageX - handle.offset().left;
+            const drawerWidth = drawerElement.width();
+            
+            $(document).on('mousemove', (e) => {
+                const newLeft = e.pageX - startX;
+                const maxLeft = drawerWidth - handle.width();
+                const clampedLeft = Math.max(0, Math.min(newLeft, maxLeft));
+                handle.css('left', clampedLeft + 'px');
+            });
+
+            $(document).on('mouseup', () => {
+                $(document).off('mousemove');
+                $(document).off('mouseup');
+            });
+        });
+
+        // Toggle drawer on handle click
+        handle.on('click', (e) => {
+            if (e.offsetX < 10 || e.offsetX > handle.width() - 10) {
+                drawerElement.toggleClass('open');
+            }
+        });
+
         $('#assistant-gm-submit').click(async () => {
             const prompt = $('#assistant-gm-prompt').val();
             const output = $('#assistant-gm-output');
@@ -96,13 +127,18 @@ export class AssistantGM {
             try {
                 const modelName = game.settings.get(this.ID, 'modelName');
                 const generatedText = await this.api.generateText(modelName, prompt);
-                const proseMirrorDoc = this.convertToProseMirror(generatedText);
-                const editor = new ProseMirror.EditorView(output[0], {
-                    state: ProseMirror.EditorState.create({
-                        doc: proseMirrorDoc,
-                        plugins: [ProseMirror.keymap(ProseMirror.baseKeymap)]
-                    })
+                const formattedContent = this.formatText(generatedText);
+                
+                // Create a new ProseMirror editor
+                const editor = new FoundryEditor(output[0], {
+                    content: formattedContent,
+                    readOnly: true,
+                    engine: "prosemirror",
+                    height: 600
                 });
+
+                // Manually trigger an update to ensure content is rendered
+                editor.render();
             } catch (error) {
                 console.error('Error generating text:', error);
                 output.html(`<p>Error: ${error.message}</p>`);
@@ -112,6 +148,18 @@ export class AssistantGM {
         $('.assistant-gm-handle').click(() => {
             $('#assistant-gm-drawer').toggleClass('open');
         });
+    }
+
+    static formatText(text) {
+        // Convert markdown-like syntax to HTML
+        return text
+            .replace(/^# (.+)$/gm, '<h1>$1</h1>')
+            .replace(/^## (.+)$/gm, '<h2>$1</h2>')
+            .replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>')
+            .replace(/\*(.+?)\*/g, '<em>$1</em>')
+            .replace(/^- (.+)$/gm, '<ul><li>$1</li></ul>')
+            .replace(/\n\n/g, '</p><p>')
+            .replace(/^(.+)$/gm, '<p>$1</p>');
     }
 
     static convertToProseMirror(text) {
