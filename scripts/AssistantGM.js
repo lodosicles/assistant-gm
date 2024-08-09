@@ -129,24 +129,21 @@ export class AssistantGM {
                 const generatedText = await this.api.generateText(modelName, prompt);
                 const formattedContent = this.formatText(generatedText);
                 
-                // Create a new ProseMirror editor
-                const editor = new FoundryEditor(output[0], {
+                // Create a new text editor
+                const editor = await TextEditor.create({
+                    target: output[0],
                     content: formattedContent,
-                    readOnly: true,
-                    engine: "prosemirror",
-                    height: 600
+                    editable: false,
+                    engine: "prosemirror"
                 });
 
-                // Manually trigger an update to ensure content is rendered
-                editor.render();
+                // Replace the output content with the editor
+                output.html(editor);
+
             } catch (error) {
                 console.error('Error generating text:', error);
                 output.html(`<p>Error: ${error.message}</p>`);
             }
-        });
-
-        $('.assistant-gm-handle').click(() => {
-            $('#assistant-gm-drawer').toggleClass('open');
         });
     }
 
