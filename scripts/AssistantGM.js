@@ -110,7 +110,7 @@ export class AssistantGM {
         if ($('#assistant-gm-drawer').length) {
             return; // Drawer already exists, don't create another one
         }
-    
+
         const drawer = $(`
             <div id="assistant-gm-drawer" class="assistant-gm-drawer">
                 <div class="assistant-gm-handle">AI</div>
@@ -118,22 +118,26 @@ export class AssistantGM {
                     <textarea id="assistant-gm-prompt" placeholder="Enter your prompt here"></textarea>
                     <button id="assistant-gm-submit">Generate</button>
                     <textarea id="assistant-gm-output" readonly></textarea>
+                    <div id="assistant-gm-journal-entries" class="assistant-gm-journal-entries">
+                        <p>Drag and drop journal entries here for context</p>
+                    </div>
                 </div>
             </div>
         `);
-    
+
         $('body').append(drawer);
-    
+
         const drawerElement = $('#assistant-gm-drawer');
         const handle = $('.assistant-gm-handle');
         const content = $('.assistant-gm-content');
-    
+        const journalEntriesField = $('#assistant-gm-journal-entries');
+
         let isDragging = false;
         let startY, startX, startDrawerHeight, startDrawerLeft;
         let moveThreshold = 5; // Pixels to move before deciding between resize and drag
         let initialClickY, initialClickX;
         let hasMovedPastThreshold = false;
-    
+
         handle.on('mousedown', (e) => {
             if (e.button !== 0) return; // Only respond to left mouse button
             isDragging = true;
@@ -144,14 +148,14 @@ export class AssistantGM {
             hasMovedPastThreshold = false;
             e.preventDefault();
         });
-    
+
         $(document).on('mousemove', (e) => {
             if (!isDragging) return;
-    
+
             const deltaY = e.clientY - initialClickY;
             const deltaX = e.clientX - initialClickX;
             const totalDelta = Math.sqrt(deltaY * deltaY + deltaX * deltaX);
-    
+
             if (!hasMovedPastThreshold) {
                 if (totalDelta > moveThreshold) {
                     hasMovedPastThreshold = true;
@@ -159,7 +163,7 @@ export class AssistantGM {
                     return;
                 }
             }
-    
+
             if (Math.abs(deltaY) > Math.abs(deltaX)) {
                 // Vertical movement - resize
                 let newHeight = startDrawerHeight + (startY - e.clientY);
@@ -175,7 +179,7 @@ export class AssistantGM {
                 drawerElement.css('left', newLeft + 'px');
             }
         });
-    
+
         $(document).on('mouseup', () => {
             if (isDragging) {
                 isDragging = false;
@@ -190,15 +194,58 @@ export class AssistantGM {
                 }
             }
         });
-    
+
+        // Handle drag and drop for journal entries
+        journalEntriesField.on('dragover', (e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            e.originalEvent.dataTransfer.dropEffect = 'copy';
+        });
+
+        journalEntriesField.on('drop', (e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            let data = JSON.parse(e.originalEvent.dataTransfer.getData('text/plain'));
+            if (data.type === 'JournalEntry') {
+                let journal = game.journal.get(data.id);
+                if (journal) {
+                    let entryElement = $(`<div class="journal-entry-item">${journal.name} <span class="remove-entry">×</span></div>`);
+                    entryElement.data('journalId', data.id);
+                    journalEntriesField.append(entryElement);
+                }
+            }
+        });
+
+        // Remove journal entry when clicking the remove button
+        journalEntriesField.on('click', '.remove-entry', function() {
+            $(this).parent().remove();
+        });
+
         $('#assistant-gm-submit').click(async () => {
             const prompt = $('#assistant-gm-prompt').val();
             const output = $('#assistant-gm-output');
             output.val('Generating...');
-    
+
             try {
                 const modelName = game.settings.get(this.ID, 'modelName');
-                const generatedText = await this.api.generateText(modelName, prompt);
+                
+                // Gather journal entry content
+                let contextContent = '';
+                $('.journal-entry-item').each(function() {
+                    const journalId = $(this).data('journalId');
+                    const journal = game.journal.get(journalId);
+                    if (journal) {
+                        contextContent += `${journal.name}:\n${journal.data.content}\n\n`;
+                    }
+                });
+
+                // Construct the full prompt
+                let fullPrompt = prompt;
+                if (contextContent) {
+                    fullPrompt += `\n\nUse the following content for context in preparing your response:\n${contextContent}`;
+                }
+
+                const generatedText = await this.api.generateText(modelName, fullPrompt);
                 output.val(generatedText);
             } catch (error) {
                 console.error('Error generating text:', error);
