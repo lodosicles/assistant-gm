@@ -1,9 +1,9 @@
 .assistant-gm-drawer {
     position: fixed;
     bottom: 0;
-    left: 20px; /* Offset from the left edge */
-    width: 300px; /* Fixed width */
-    height: 30px; /* Start with only the handle visible */
+    left: 20px;
+    width: 300px;
+    height: 20px; /* Reduced height for the tab */
     background: #f0f0f0;
     border: 1px solid #ccc;
     border-bottom: none;
@@ -14,18 +14,19 @@
 }
 
 .assistant-gm-handle {
-    height: 30px;
+    height: 20px; /* Reduced height for the tab */
     background: #e0e0e0;
     border-bottom: 1px solid #ccc;
-    cursor: ns-resize;
+    cursor: move;
     text-align: center;
-    line-height: 30px;
+    line-height: 20px;
+    font-size: 12px;
 }
 
 .assistant-gm-content {
     display: none;
     padding: 10px;
-    height: calc(100% - 40px); /* Account for handle and padding */
+    height: calc(100% - 30px); /* Adjusted for smaller handle */
     overflow-y: auto;
 }
 
