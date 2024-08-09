@@ -63,6 +63,18 @@
     margin: 0;
 }
 
+.assistant-gm-journal-entries {
+    min-height: 50px;
+    border: 2px dashed #ccc;
+    padding: 10px;
+    margin-top: 10px;
+}
+
+.assistant-gm-journal-entries.dragover {
+    background-color: rgba(0, 255, 0, 0.1);
+    border-color: #0f0;
+}
+
 .journal-entry-item {
     background-color: #e0e0e0;
     border: 1px solid #ccc;
