@@ -3,7 +3,7 @@
     bottom: 0;
     left: 20px;
     width: 300px;
-    height: 20px; /* Reduced height for the tab */
+    height: 20px;
     background: #f0f0f0;
     border: 1px solid #ccc;
     border-bottom: none;
@@ -14,7 +14,7 @@
 }
 
 .assistant-gm-handle {
-    height: 20px; /* Reduced height for the tab */
+    height: 20px;
     background: #e0e0e0;
     border-bottom: 1px solid #ccc;
     cursor: move;
@@ -26,7 +26,7 @@
 .assistant-gm-content {
     display: none;
     padding: 10px;
-    height: calc(100% - 30px); /* Adjusted for smaller handle */
+    height: calc(100% - 30px);
     overflow-y: auto;
 }
 
@@ -47,4 +47,20 @@
 #assistant-gm-submit {
     display: block;
     margin-bottom: 10px;
+}
+
+.assistant-gm-journal-list {
+    margin-top: 10px;
+    border: 1px solid #ccc;
+    padding: 10px;
+    max-height: 200px;
+    overflow-y: auto;
+}
+
+.journal-item {
+    margin-bottom: 5px;
+}
+
+.journal-item label {
+    margin-left: 5px;
 }
