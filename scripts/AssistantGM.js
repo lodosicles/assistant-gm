@@ -2,8 +2,6 @@
 
 import { OpenWebUIAPI } from './OpenWebUIAPI.js';
 
-console.log('AssistantGM | AssistantGM.js loaded');
-
 export class AssistantGM {
     static ID = 'assistant-gm';
     static api;
@@ -13,8 +11,6 @@ export class AssistantGM {
         try {
             this.registerSettings();
             console.log('AssistantGM | Settings registered');
-            this.registerTextEnricher();
-            console.log('AssistantGM | Text enricher registered');
         } catch (error) {
             console.error('AssistantGM | Error during initialization:', error);
         }
@@ -60,13 +56,6 @@ export class AssistantGM {
         });
     }
 
-    static registerTextEnricher() {
-        CONFIG.TextEditor.enrichers.push({
-            pattern: /@assistant\[([^\]]+)(?:#([^#]+)#)?\]/g,
-            enricher: this.enrichAssistant.bind(this)
-        });
-    }
-
     static initializeAPI() {
         const apiUrl = game.settings.get(this.ID, 'apiUrl');
         const jwtToken = game.settings.get(this.ID, 'jwtToken');
@@ -85,118 +74,38 @@ export class AssistantGM {
         }
     }
 
-    static async updateAvailableModels() {
-        console.log('Fetching available AI models...');
-        try {
-            const models = await this.api.getModels();
-            console.log('Fetched models:', models);
-            
-            if (models.length === 0) {
-                ui.notifications.error('No AI models found. Check your API URL and JWT token.');
-                return;
-            }
+    static createDrawer() {
+        const drawer = $(`
+            <div id="assistant-gm-drawer" class="assistant-gm-drawer">
+                <div class="assistant-gm-handle">Assistant GM</div>
+                <div class="assistant-gm-content">
+                    <textarea id="assistant-gm-prompt" placeholder="Enter your prompt here"></textarea>
+                    <button id="assistant-gm-submit">Generate</button>
+                    <div id="assistant-gm-output"></div>
+                </div>
+            </div>
+        `);
 
-            const modelChoices = Object.fromEntries(models.map(model => [model.name, model.name]));
-            
-            // Update the choices for the modelName setting
-            const setting = game.settings.settings.get(`${this.ID}.modelName`);
-            setting.choices = modelChoices;
-            
-            // If the current model is not in the list, set it to the first available model
-            const currentModel = game.settings.get(this.ID, 'modelName');
-            if (!models.some(model => model.name === currentModel) || currentModel === '') {
-                await game.settings.set(this.ID, 'modelName', models[0].name);
-            }
-            
-            ui.notifications.info('AI models updated successfully');
-        } catch (error) {
-            console.error('Error fetching models:', error);
-            ui.notifications.error(`Failed to fetch AI models: ${error.message}`);
-        }
-    }
+        $('body').append(drawer);
 
-    static async enrichAssistant(match, options) {
-        console.log('Enriching assistant content:', match);
-        if (!this.api) {
-            console.error('API not initialized');
-            return '<span class="assistant-error">Error: API not initialized</span>';
-        }
-    
-        const [fullMatch, prompt, journalName] = match;
-        const modelName = game.settings.get(this.ID, 'modelName');
-        
-        let fullPrompt = prompt;
-        if (journalName) {
-            const journal = game.journal.getName(journalName);
-            if (journal) {
-                fullPrompt += "\n\nJournal Content:\n" + journal.data.content;
-            } else {
-                console.warn(`Journal "${journalName}" not found.`);
-            }
-        }
-    
-        try {
-            console.log('Generating text with prompt:', fullPrompt);
-            const generatedText = await this.api.generateText(modelName, fullPrompt);
-            console.log('Generated text:', generatedText);
-    
-            // Update the journal entry content
-            if (options.journalEntry) {
-                const updatedContent = options.journalEntry.data.content.replace(fullMatch, generatedText);
-                await options.journalEntry.update({content: updatedContent});
-            }
-    
-            return `<span class="assistant-generated-text">${generatedText.replace(/\n/g, '<br>')}</span>`;
-        } catch (error) {
-            console.error('Error generating text:', error);
-            ui.notifications.error(`Failed to generate text: ${error.message}`);
-            return `<span class="assistant-error">Error: ${error.message}</span>`;
-        }
-    }
+        $('#assistant-gm-submit').click(async () => {
+            const prompt = $('#assistant-gm-prompt').val();
+            const output = $('#assistant-gm-output');
+            output.text('Generating...');
 
-    static async generateTextFromPrompt(prompt) {
-        const modelName = game.settings.get(this.ID, 'modelName');
-        try {
-            return await this.api.generateText(modelName, prompt);
-        } catch (error) {
-            console.error('Error generating text:', error);
-            ui.notifications.error(`Failed to generate text: ${error.message}`);
-            return null;
-        }
-    }
-
-    static async generateAndAddPage(journalEntry, prompt) {
-        if (!this.api) {
-            ui.notifications.error('API not initialized');
-            return;
-        }
-    
-        const modelName = game.settings.get(this.ID, 'modelName');
-    
-        try {
-            ui.notifications.info('Generating content...');
-            const generatedText = await this.api.generateText(modelName, prompt);
-            
-            const newPage = {
-                name: `AI Generated: ${prompt.substring(0, 20)}...`,
-                type: "text",
-                text: {
-                    content: generatedText
-                }
-            };
-    
-            await journalEntry.createEmbeddedDocuments("JournalEntryPage", [newPage]);
-            ui.notifications.success('New page added with generated content');
-            
-            // Force a re-render of the journal sheet
-            const sheet = journalEntry.sheet;
-            if (sheet && sheet.rendered) {
-                sheet.render(true);
+            try {
+                const modelName = game.settings.get(this.ID, 'modelName');
+                const generatedText = await this.api.generateText(modelName, prompt);
+                output.text(generatedText);
+            } catch (error) {
+                console.error('Error generating text:', error);
+                output.text(`Error: ${error.message}`);
             }
-        } catch (error) {
-            console.error('Error generating text:', error);
-            ui.notifications.error(`Failed to generate text: ${error.message}`);
-        }
+        });
+
+        $('.assistant-gm-handle').click(() => {
+            $('#assistant-gm-drawer').toggleClass('open');
+        });
     }
 }
 
