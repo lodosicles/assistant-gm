@@ -129,16 +129,15 @@ export class AssistantGM {
                 const generatedText = await this.api.generateText(modelName, prompt);
                 const formattedContent = this.formatText(generatedText);
                 
-                // Create a new text editor
-                const editor = await TextEditor.create({
+                // Create a new ProseMirror-based editor
+                const editor = new ProseMirrorEditor({
+                    parent: output[0],
                     target: output[0],
                     content: formattedContent,
-                    editable: false,
-                    engine: "prosemirror"
+                    editable: false
                 });
 
-                // Replace the output content with the editor
-                output.html(editor);
+                editor.render();
 
             } catch (error) {
                 console.error('Error generating text:', error);
@@ -214,6 +213,40 @@ export class AssistantGM {
     }
 
 }
+
+class ProseMirrorEditor extends HTMLElement {
+    constructor(options = {}) {
+        super();
+        this.options = foundry.utils.mergeObject({
+            content: "",
+            editable: true
+        }, options);
+    }
+
+    connectedCallback() {
+        this.render();
+    }
+
+    render() {
+        const editorElement = document.createElement("div");
+        editorElement.classList.add("editor-content");
+        editorElement.innerHTML = this.options.content;
+        
+        if (!this.options.editable) {
+            editorElement.setAttribute("contenteditable", "false");
+        }
+
+        this.innerHTML = "";
+        this.appendChild(editorElement);
+
+        if (this.options.editable) {
+            // If editable, you might want to add more ProseMirror setup here
+            // For now, we're just using it as a display container
+        }
+    }
+}
+
+customElements.define("prosemirror-editor", ProseMirrorEditor);
 
 class FetchModelsForm extends FormApplication {
     static get defaultOptions() {
