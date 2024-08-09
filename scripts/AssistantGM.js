@@ -81,32 +81,33 @@ export class AssistantGM {
                 <div class="assistant-gm-content">
                     <textarea id="assistant-gm-prompt" placeholder="Enter your prompt here"></textarea>
                     <button id="assistant-gm-submit">Generate</button>
-                    <div id="assistant-gm-output"></div>
+                    <textarea id="assistant-gm-output" readonly></textarea>
                 </div>
             </div>
         `);
-
+    
         $('body').append(drawer);
-
+    
         $('#assistant-gm-submit').click(async () => {
             const prompt = $('#assistant-gm-prompt').val();
             const output = $('#assistant-gm-output');
-            output.text('Generating...');
-
+            output.val('Generating...');
+    
             try {
                 const modelName = game.settings.get(this.ID, 'modelName');
                 const generatedText = await this.api.generateText(modelName, prompt);
-                output.text(generatedText);
+                output.val(generatedText);
             } catch (error) {
                 console.error('Error generating text:', error);
-                output.text(`Error: ${error.message}`);
+                output.val(`Error: ${error.message}`);
             }
         });
-
+    
         $('.assistant-gm-handle').click(() => {
             $('#assistant-gm-drawer').toggleClass('open');
         });
     }
+        
 }
 
 class FetchModelsForm extends FormApplication {

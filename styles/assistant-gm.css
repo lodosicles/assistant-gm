@@ -49,8 +49,46 @@
 
 #assistant-gm-output {
     flex-grow: 1;
-    overflow-y: auto;
+    width: 100%;
+    resize: none;
     background: white;
     border: 1px solid #ccc;
     padding: 10px;
+    font-family: inherit;
+    font-size: inherit;
+}
+
+/* Add these new styles for better usability */
+#assistant-gm-prompt, #assistant-gm-output {
+    font-family: Arial, sans-serif;
+    font-size: 14px;
+    line-height: 1.5;
+}
+
+#assistant-gm-submit {
+    align-self: flex-start;
+    margin-bottom: 10px;
+    padding: 5px 15px;
+    background-color: #4CAF50;
+    color: white;
+    border: none;
+    cursor: pointer;
+    transition: background-color 0.3s;
+}
+
+#assistant-gm-submit:hover {
+    background-color: #45a049;
+}
+
+/* Adjust the drawer height for better visibility */
+.assistant-gm-drawer {
+    height: 400px;
+    bottom: -400px;
+}
+
+.assistant-gm-content {
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+    padding: 15px;
 }
