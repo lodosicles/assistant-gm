@@ -81,33 +81,93 @@ export class AssistantGM {
                 <div class="assistant-gm-content">
                     <textarea id="assistant-gm-prompt" placeholder="Enter your prompt here"></textarea>
                     <button id="assistant-gm-submit">Generate</button>
-                    <textarea id="assistant-gm-output" readonly></textarea>
+                    <div id="assistant-gm-output"></div>
                 </div>
             </div>
         `);
-    
+
         $('body').append(drawer);
-    
+
         $('#assistant-gm-submit').click(async () => {
             const prompt = $('#assistant-gm-prompt').val();
             const output = $('#assistant-gm-output');
-            output.val('Generating...');
-    
+            output.html('<p>Generating...</p>');
+
             try {
                 const modelName = game.settings.get(this.ID, 'modelName');
                 const generatedText = await this.api.generateText(modelName, prompt);
-                output.val(generatedText);
+                const proseMirrorDoc = this.convertToProseMirror(generatedText);
+                const editor = new ProseMirror.EditorView(output[0], {
+                    state: ProseMirror.EditorState.create({
+                        doc: proseMirrorDoc,
+                        plugins: [ProseMirror.keymap(ProseMirror.baseKeymap)]
+                    })
+                });
             } catch (error) {
                 console.error('Error generating text:', error);
-                output.val(`Error: ${error.message}`);
+                output.html(`<p>Error: ${error.message}</p>`);
             }
         });
-    
+
         $('.assistant-gm-handle').click(() => {
             $('#assistant-gm-drawer').toggleClass('open');
         });
     }
-        
+
+    static convertToProseMirror(text) {
+        const lines = text.split('\n');
+        const doc = {type: "doc", content: []};
+        let currentList = null;
+
+        for (const line of lines) {
+            if (line.startsWith('# ')) {
+                doc.content.push({type: "heading", attrs: {level: 1}, content: [{type: "text", text: line.slice(2)}]});
+            } else if (line.startsWith('## ')) {
+                doc.content.push({type: "heading", attrs: {level: 2}, content: [{type: "text", text: line.slice(3)}]});
+            } else if (line.startsWith('- ')) {
+                if (!currentList || currentList.type !== "bullet_list") {
+                    currentList = {type: "bullet_list", content: []};
+                    doc.content.push(currentList);
+                }
+                currentList.content.push({type: "list_item", content: [{type: "paragraph", content: this.parseInline(line.slice(2))}]});
+            } else if (line.trim() === '') {
+                doc.content.push({type: "paragraph"});
+                currentList = null;
+            } else {
+                doc.content.push({type: "paragraph", content: this.parseInline(line)});
+                currentList = null;
+            }
+        }
+
+        return doc;
+    }
+
+    static parseInline(text) {
+        const content = [];
+        let currentText = '';
+        let bold = false;
+        let italic = false;
+
+        for (let i = 0; i < text.length; i++) {
+            if (text[i] === '*' && text[i+1] === '*') {
+                if (currentText) content.push({type: "text", text: currentText, marks: bold ? [{type: "strong"}] : []});
+                currentText = '';
+                bold = !bold;
+                i++;
+            } else if (text[i] === '*') {
+                if (currentText) content.push({type: "text", text: currentText, marks: italic ? [{type: "em"}] : []});
+                currentText = '';
+                italic = !italic;
+            } else {
+                currentText += text[i];
+            }
+        }
+
+        if (currentText) content.push({type: "text", text: currentText, marks: []});
+
+        return content;
+    }
+
 }
 
 class FetchModelsForm extends FormApplication {
