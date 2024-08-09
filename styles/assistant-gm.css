@@ -3,7 +3,7 @@
     bottom: 0;
     left: 20px;
     width: 300px;
-    height: 20px; /* Reduced height for the tab */
+    height: 20px;
     background: #f0f0f0;
     border: 1px solid #ccc;
     border-bottom: none;
@@ -14,7 +14,7 @@
 }
 
 .assistant-gm-handle {
-    height: 20px; /* Reduced height for the tab */
+    height: 20px;
     background: #e0e0e0;
     border-bottom: 1px solid #ccc;
     cursor: move;
@@ -26,7 +26,7 @@
 .assistant-gm-content {
     display: none;
     padding: 10px;
-    height: calc(100% - 30px); /* Adjusted for smaller handle */
+    height: calc(100% - 30px);
     overflow-y: auto;
 }
 
@@ -49,35 +49,18 @@
     margin-bottom: 10px;
 }
 
-.assistant-gm-journal-entries {
-    border: 2px dashed #ccc;
-    padding: 10px;
-    min-height: 50px;
+.assistant-gm-journal-list {
     margin-top: 10px;
-}
-
-.assistant-gm-journal-entries.dragover {
-    background-color: rgba(0, 255, 0, 0.1);
-    border-color: #0f0;
-}
-
-.journal-entry-item {
-    background-color: #f0f0f0;
     border: 1px solid #ccc;
-    border-radius: 3px;
-    padding: 5px;
-    margin: 5px 0;
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
+    padding: 10px;
+    max-height: 200px;
+    overflow-y: auto;
 }
 
-.remove-entry {
-    cursor: pointer;
-    color: #888;
-    font-weight: bold;
+.journal-item {
+    margin-bottom: 5px;
 }
 
-.remove-entry:hover {
-    color: #f00;
+.journal-item label {
+    margin-left: 5px;
 }

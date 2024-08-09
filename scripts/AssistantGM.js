@@ -110,7 +110,7 @@ export class AssistantGM {
         if ($('#assistant-gm-drawer').length) {
             return; // Drawer already exists, don't create another one
         }
-    
+
         const drawer = $(`
             <div id="assistant-gm-drawer" class="assistant-gm-drawer">
                 <div class="assistant-gm-handle">AI</div>
@@ -118,19 +118,20 @@ export class AssistantGM {
                     <textarea id="assistant-gm-prompt" placeholder="Enter your prompt here"></textarea>
                     <button id="assistant-gm-submit">Generate</button>
                     <textarea id="assistant-gm-output" readonly></textarea>
-                    <div id="assistant-gm-journal-entries" class="assistant-gm-journal-entries">
-                        <p>Drag and drop journal entries here for context</p>
+                    <div id="assistant-gm-journal-list" class="assistant-gm-journal-list">
+                        <h3>Select Journal Entries for Context</h3>
+                        <div id="assistant-gm-journal-entries"></div>
                     </div>
                 </div>
             </div>
         `);
-    
+
         $('body').append(drawer);
-    
+
         const drawerElement = $('#assistant-gm-drawer');
         const handle = $('.assistant-gm-handle');
         const content = $('.assistant-gm-content');
-        const journalEntriesField = $('#assistant-gm-journal-entries');
+        const journalEntriesList = $('#assistant-gm-journal-entries');
 
         let isDragging = false;
         let startY, startX, startDrawerHeight, startDrawerLeft;
@@ -195,24 +196,7 @@ export class AssistantGM {
             }
         });
 
-        // Set up drag and drop for journal entries
-        new Draggable({
-            dropSelector: "#assistant-gm-journal-entries",
-            callbacks: {
-                dragover: this._onDragOver.bind(this),
-                dragleave: this._onDragLeave.bind(this),
-                drop: this._onDrop.bind(this)
-            }
-        }).bind(journalEntriesField);
-
-        // Remove journal entry when clicking the remove button
-        $(journalEntriesField).on('click', '.remove-entry', function() {
-            $(this).parent().remove();
-            // If no entries left, add back the placeholder text
-            if ($('.journal-entry-item', journalEntriesField).length === 0) {
-                $(journalEntriesField).append('<p>Drag and drop journal entries here for context</p>');
-            }
-        });
+        this.populateJournalList(journalEntriesList);
 
         $('#assistant-gm-submit').click(async () => {
             const prompt = $('#assistant-gm-prompt').val();
@@ -222,10 +206,10 @@ export class AssistantGM {
             try {
                 const modelName = game.settings.get(this.ID, 'modelName');
                 
-                // Gather journal entry content
+                // Gather selected journal entry content
                 let contextContent = '';
-                $('.journal-entry-item', journalEntriesField).each(function() {
-                    const journalId = $(this).data('journalId');
+                $('input:checked', journalEntriesList).each(function() {
+                    const journalId = $(this).val();
                     const journal = game.journal.get(journalId);
                     if (journal) {
                         contextContent += `${journal.name}:\n${journal.pages.contents[0].text.content}\n\n`;
@@ -247,49 +231,17 @@ export class AssistantGM {
         });
     }
 
-    static _onDragOver(event) {
-        event.preventDefault();
-        event.currentTarget.classList.add('dragover');
-    }
-
-    static _onDragLeave(event) {
-        event.preventDefault();
-        event.currentTarget.classList.remove('dragover');
-    }
-
-    static _onDrop(event) {
-        event.preventDefault();
-        const journalEntriesField = event.currentTarget;
-        journalEntriesField.classList.remove('dragover');
-
-        // Get the dropped data
-        let data;
-        try {
-            data = JSON.parse(event.dataTransfer.getData('text/plain'));
-        } catch (err) {
-            console.error("Failed to parse drag data", err);
-            return;
-        }
-
-        console.log("Dropped data:", data);  // For debugging
-
-        // Check if it's a journal entry
-        if (data.type === 'JournalEntry') {
-            let journal = game.journal.get(data.id);
-            if (journal) {
-                console.log("Found journal:", journal);  // For debugging
-                // Create a new entry element
-                let entryElement = $(`<div class="journal-entry-item" data-journal-id="${data.id}">${journal.name} <span class="remove-entry">×</span></div>`);
-                
-                // Append the new entry
-                $(journalEntriesField).append(entryElement);
-
-                // Clear the placeholder text if it exists
-                $(journalEntriesField).find('p').remove();
-
-                console.log("Added journal entry to list");  // For debugging
-            }
-        }
+    static populateJournalList(listElement) {
+        const journals = game.journal.contents;
+        journals.forEach(journal => {
+            const journalItem = $(`
+                <div class="journal-item">
+                    <input type="checkbox" id="journal-${journal.id}" value="${journal.id}">
+                    <label for="journal-${journal.id}">${journal.name}</label>
+                </div>
+            `);
+            listElement.append(journalItem);
+        });
     }
 }
 
