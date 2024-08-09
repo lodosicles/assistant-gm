@@ -1,73 +1,59 @@
 .assistant-gm-drawer {
     position: fixed;
-    bottom: -600px;
+    bottom: 0;
     left: 0;
     right: 0;
-    height: 600px;
+    height: 300px; /* Default height */
     background: #f0f0f0;
     border-top: 1px solid #ccc;
-    transition: bottom 0.3s ease-in-out;
+    transition: bottom 0.3s ease-out;
     z-index: 100;
-}
-
-.assistant-gm-drawer.open {
-    bottom: 0;
 }
 
 .assistant-gm-handle {
     position: absolute;
     top: -30px;
-    left: 50%;
-    transform: translateX(-50%);
-    background: #f0f0f0;
-    padding: 5px 20px;
-    border: 1px solid #ccc;
-    border-bottom: none;
-    cursor: move;
+    left: 0;
+    right: 0;
+    height: 30px;
+    background: #e0e0e0;
+    border-top: 1px solid #ccc;
     border-top-left-radius: 5px;
     border-top-right-radius: 5px;
-    user-select: none;
-    z-index: 101;
+    cursor: ns-resize;
+    text-align: center;
+    line-height: 30px;
+}
+
+.assistant-gm-resize-handle {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 5px;
+    cursor: ns-resize;
 }
 
 .assistant-gm-content {
-    padding: 20px;
-    height: 100%;
+    padding: 10px;
+    height: calc(100% - 20px);
     display: flex;
     flex-direction: column;
 }
 
-#assistant-gm-prompt {
+#assistant-gm-prompt, #assistant-gm-output {
     width: 100%;
+    margin-bottom: 10px;
+}
+
+#assistant-gm-prompt {
     height: 100px;
-    margin-bottom: 10px;
-    resize: none;
-}
-
-#assistant-gm-submit {
-    align-self: flex-start;
-    margin-bottom: 10px;
-    padding: 5px 15px;
-    background-color: #4CAF50;
-    color: white;
-    border: none;
-    cursor: pointer;
-    transition: background-color 0.3s;
-}
-
-#assistant-gm-submit:hover {
-    background-color: #45a049;
 }
 
 #assistant-gm-output {
     flex-grow: 1;
-    overflow-y: auto;
-    background: white;
-    border: 1px solid #ccc;
-    padding: 10px;
 }
 
-#assistant-gm-output .editor {
-    height: 100%;
-    border: none;
+#assistant-gm-submit {
+    align-self: flex-start;
 }
