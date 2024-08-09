@@ -1,6 +1,6 @@
 .assistant-gm-drawer {
     position: fixed;
-    bottom: 0;
+    bottom: -270px; /* Start hidden, showing only the handle */
     left: 0;
     right: 0;
     height: 300px; /* Default height */

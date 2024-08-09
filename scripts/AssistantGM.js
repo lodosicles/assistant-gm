@@ -107,6 +107,10 @@ export class AssistantGM {
     }
 
     static createDrawer() {
+        if ($('#assistant-gm-drawer').length) {
+            return; // Drawer already exists, don't create another one
+        }
+    
         const drawer = $(`
             <div id="assistant-gm-drawer" class="assistant-gm-drawer">
                 <div class="assistant-gm-handle">Assistant GM</div>
@@ -130,18 +134,11 @@ export class AssistantGM {
         let startHeight;
         let startDrawerBottom;
     
-        // Handle drawer opening/closing
-        handle.on('mousedown', (e) => {
+        // Handle drawer opening/closing and resizing
+        handle.add(resizeHandle).on('mousedown', (e) => {
             isDragging = true;
             startY = e.clientY;
             startDrawerBottom = parseInt(drawerElement.css('bottom'));
-            e.preventDefault();
-        });
-    
-        // Handle drawer resizing
-        resizeHandle.on('mousedown', (e) => {
-            isDragging = true;
-            startY = e.clientY;
             startHeight = drawerElement.height();
             e.preventDefault();
         });
@@ -154,7 +151,7 @@ export class AssistantGM {
             if ($(e.target).is(handle)) {
                 // Opening/closing the drawer
                 let newBottom = startDrawerBottom + deltaY;
-                newBottom = Math.min(Math.max(newBottom, 0), drawerElement.height() - handle.height());
+                newBottom = Math.max(newBottom, -startHeight + handle.height());
                 drawerElement.css('bottom', `${newBottom}px`);
             } else if ($(e.target).is(resizeHandle)) {
                 // Resizing the drawer
@@ -168,10 +165,10 @@ export class AssistantGM {
             if (isDragging) {
                 isDragging = false;
                 const currentBottom = parseInt(drawerElement.css('bottom'));
-                if (currentBottom > drawerElement.height() / 2) {
-                    drawerElement.css('bottom', '0px'); // Close
+                if (currentBottom < -drawerElement.height() / 2) {
+                    drawerElement.css('bottom', `${-drawerElement.height() + handle.height()}px`); // Close
                 } else {
-                    drawerElement.css('bottom', `${drawerElement.height() - handle.height()}px`); // Open
+                    drawerElement.css('bottom', '0px'); // Open
                 }
             }
         });
