@@ -129,34 +129,47 @@ export class AssistantGM {
         const content = $('.assistant-gm-content');
     
         let isDragging = false;
-        let isResizing = false;
         let startY, startX, startDrawerHeight, startDrawerLeft;
+        let moveThreshold = 5; // Pixels to move before deciding between resize and drag
+        let initialClickY, initialClickX;
+        let hasMovedPastThreshold = false;
     
         handle.on('mousedown', (e) => {
             if (e.button !== 0) return; // Only respond to left mouse button
-            if (drawerElement.height() > handle.height()) {
-                isResizing = true;
-            } else {
-                isDragging = true;
-            }
-            startY = e.clientY;
-            startX = e.clientX;
+            isDragging = true;
+            startY = initialClickY = e.clientY;
+            startX = initialClickX = e.clientX;
             startDrawerHeight = drawerElement.height();
             startDrawerLeft = drawerElement.position().left;
+            hasMovedPastThreshold = false;
             e.preventDefault();
         });
     
         $(document).on('mousemove', (e) => {
-            if (isResizing) {
-                const deltaY = startY - e.clientY;
-                let newHeight = startDrawerHeight + deltaY;
+            if (!isDragging) return;
+    
+            const deltaY = e.clientY - initialClickY;
+            const deltaX = e.clientX - initialClickX;
+            const totalDelta = Math.sqrt(deltaY * deltaY + deltaX * deltaX);
+    
+            if (!hasMovedPastThreshold) {
+                if (totalDelta > moveThreshold) {
+                    hasMovedPastThreshold = true;
+                } else {
+                    return;
+                }
+            }
+    
+            if (Math.abs(deltaY) > Math.abs(deltaX)) {
+                // Vertical movement - resize
+                let newHeight = startDrawerHeight + (startY - e.clientY);
                 newHeight = Math.max(newHeight, handle.height());
                 newHeight = Math.min(newHeight, window.innerHeight - handle.height());
                 drawerElement.height(newHeight);
                 content.toggle(newHeight > handle.height());
-            } else if (isDragging) {
-                const deltaX = e.clientX - startX;
-                let newLeft = startDrawerLeft + deltaX;
+            } else {
+                // Horizontal movement - reposition
+                let newLeft = startDrawerLeft + (e.clientX - startX);
                 newLeft = Math.max(newLeft, 0);
                 newLeft = Math.min(newLeft, window.innerWidth - drawerElement.width());
                 drawerElement.css('left', newLeft + 'px');
@@ -164,11 +177,17 @@ export class AssistantGM {
         });
     
         $(document).on('mouseup', () => {
-            isDragging = false;
-            isResizing = false;
-            if (drawerElement.height() <= handle.height()) {
-                drawerElement.height(handle.height());
-                content.hide();
+            if (isDragging) {
+                isDragging = false;
+                if (drawerElement.height() <= handle.height()) {
+                    drawerElement.height(handle.height());
+                    content.hide();
+                } else if (drawerElement.height() < 50) { // Arbitrary small height
+                    drawerElement.height(handle.height());
+                    content.hide();
+                } else {
+                    content.show();
+                }
             }
         });
     
