@@ -110,7 +110,7 @@ export class AssistantGM {
         if ($('#assistant-gm-drawer').length) {
             return; // Drawer already exists, don't create another one
         }
-
+    
         const drawer = $(`
             <div id="assistant-gm-drawer" class="assistant-gm-drawer">
                 <div class="assistant-gm-handle">AI</div>
@@ -124,9 +124,9 @@ export class AssistantGM {
                 </div>
             </div>
         `);
-
+    
         $('body').append(drawer);
-
+    
         const drawerElement = $('#assistant-gm-drawer');
         const handle = $('.assistant-gm-handle');
         const content = $('.assistant-gm-content');
@@ -199,33 +199,51 @@ export class AssistantGM {
         journalEntriesField.on('dragover', (e) => {
             e.preventDefault();
             e.stopPropagation();
-            e.originalEvent.dataTransfer.dropEffect = 'copy';
         });
-
-        journalEntriesField.on('drop', (e) => {
+    
+        journalEntriesField.on('drop', async (e) => {
             e.preventDefault();
             e.stopPropagation();
-            let data = JSON.parse(e.originalEvent.dataTransfer.getData('text/plain'));
+            
+            // Get the dropped data
+            let data;
+            try {
+                data = JSON.parse(e.originalEvent.dataTransfer.getData('text/plain'));
+            } catch (err) {
+                console.error("Failed to parse drag data", err);
+                return;
+            }
+    
+            // Check if it's a journal entry
             if (data.type === 'JournalEntry') {
                 let journal = game.journal.get(data.id);
                 if (journal) {
-                    let entryElement = $(`<div class="journal-entry-item">${journal.name} <span class="remove-entry">×</span></div>`);
-                    entryElement.data('journalId', data.id);
+                    // Create a new entry element
+                    let entryElement = $(`<div class="journal-entry-item" data-journal-id="${data.id}">${journal.name} <span class="remove-entry">×</span></div>`);
+                    
+                    // Append the new entry
                     journalEntriesField.append(entryElement);
+    
+                    // Clear the placeholder text if it exists
+                    journalEntriesField.find('p').remove();
                 }
             }
         });
-
+    
         // Remove journal entry when clicking the remove button
         journalEntriesField.on('click', '.remove-entry', function() {
             $(this).parent().remove();
+            // If no entries left, add back the placeholder text
+            if (journalEntriesField.children().length === 0) {
+                journalEntriesField.append('<p>Drag and drop journal entries here for context</p>');
+            }
         });
-
+    
         $('#assistant-gm-submit').click(async () => {
             const prompt = $('#assistant-gm-prompt').val();
             const output = $('#assistant-gm-output');
             output.val('Generating...');
-
+    
             try {
                 const modelName = game.settings.get(this.ID, 'modelName');
                 
@@ -235,16 +253,16 @@ export class AssistantGM {
                     const journalId = $(this).data('journalId');
                     const journal = game.journal.get(journalId);
                     if (journal) {
-                        contextContent += `${journal.name}:\n${journal.data.content}\n\n`;
+                        contextContent += `${journal.name}:\n${journal.pages.contents[0].text.content}\n\n`;
                     }
                 });
-
+    
                 // Construct the full prompt
                 let fullPrompt = prompt;
                 if (contextContent) {
                     fullPrompt += `\n\nUse the following content for context in preparing your response:\n${contextContent}`;
                 }
-
+    
                 const generatedText = await this.api.generateText(modelName, fullPrompt);
                 output.val(generatedText);
             } catch (error) {
