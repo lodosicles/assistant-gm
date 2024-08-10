@@ -1,10 +1,10 @@
 # AssistantGM
 
-AssistantGM is a module for Foundry VTT that integrates a local Large Language Model into your game, assisting with dynamic content generation. It allows you to generate text based on prompts and selected journal entries, leveraging the power of AI to enhance your storytelling and world-building.
+AssistantGM is a module for Foundry VTT that integrates a local large language model into your game via the Open WebUI API. It allows you to generate text based on prompts and selected journal entries, assisting with dynamic content generation. 
 
 I have never coded a module for FoundryVTT before let alone anything in Javascript.  Please forgive any egregious weirdness in the code, my lack of knowledge, and any questionable coding.  I only have limited Python experience. 
 
-
+Also please note this is obviously not affiliated with Open WebUI or Ollama in any way.
 
 ## Features
 
@@ -17,24 +17,30 @@ I have never coded a module for FoundryVTT before let alone anything in Javascri
 
 ## Limitations
 
-- Responses are returned in Markdown 
+- Responses are returned in markdown format by Open WebUI.  Currently best results for copying and pasting into journals is when the journal entry is also in markdown.
 - The journal content is passed to the Open WebUI instance as an addition to your prompt along with the phrase "Use the following content for context in preparing your response:".
-  Depending on the context window of the model chosen, and the length of the journal, this may impact the quality of the model's response.  For the time being I recommend you choose
-  a model with a large context window (such as Mistral-Nemo 12B) and setting the context length within Open WebUI as needed under the 'Advanced' menu in 'General' settings.
+  Depending on the context window of the model chosen, and the length of the journal, this may impact the quality of the model's response.  For the time being I recommend you choose a model with a large context window (such as Mistral-Nemo 12B) and setting the context length within Open WebUI as needed under the 'Advanced' menu in 'General' settings.
   Although I still have to test with the context length can be set from within FoundryVTT.
-- The journal content is not chunked, and an embedding is not created, for RAG.  This could be one method to enable use of models with smaller context windows. 
+- The journal content is not chunked, and an embedding is not created, for RAG.  This could be one method to enable use of models with smaller context windows.
 
-## Version Notes and Planned Roadmap
+## Version Notes and Planned Features
 
-v0.1
+### v0.1
 
 - Model selection.
 - Prompt generation.
 - Journal selection for context in prompt generation via a checkbox system.
 
-Planned Roadmap
+### Planned Features
 
-- Journal selection
+- Reduce the width size of the tab.
+- Change colour scheme to better match FoundryVTT,
+- Allow user to select whether responses are in markdown or in Prose Mirror.
+- Expanded journal selection allowing only individual pages to be sent as context if desired.
+- Selected journals to be chunked, and an embedding created when being passed to OpenWebUI.  This will be user selectable in settings.
+- Journal selection managed by drag and drop.
+- Integration with a text to image system, such as ComfyUI or Automatic1111, to allow generation of images directly within FoundryVTT
+- More ...
 
 ## Configuration
 
@@ -59,6 +65,9 @@ You will then be able to select a model from the drop down list.  Remember to cl
 4. Select any relevant journal entries for context by checking the boxes next to their names.
 5. Click the "Generate" button to create AI-generated text based on your prompt and selected context.
 6. The generated text will appear in the output area, which you can copy and use in your game.
+7. Click and drag down to close the AssistantGM drawer.
+
+You can reposition the drawer by clicking and dragging left and right.
 
 ## Customization
 
