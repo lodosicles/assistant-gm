@@ -112,26 +112,31 @@ export class AssistantGM {
 
     static createDrawer() {
         if (!game.user.isGM) return;
-            if ($('#assistant-gm-drawer').length) {
-                return; // Drawer already exists, don't create another one
-            }
-        
-            const drawer = $(`
-                <div id="assistant-gm-drawer" class="assistant-gm-drawer">
-                    <div class="assistant-gm-handle">AI</div>
-                    <div class="assistant-gm-content">
-                        <textarea id="assistant-gm-prompt" placeholder="Enter your prompt here"></textarea>
-                        <button id="assistant-gm-submit">Generate</button>
-                        <textarea id="assistant-gm-output" readonly></textarea>
+        if ($('#assistant-gm-drawer').length) {
+            return; // Drawer already exists, don't create another one
+        }
+    
+        const drawer = $(`
+            <div id="assistant-gm-drawer" class="assistant-gm-drawer">
+                <div class="assistant-gm-handle">AI</div>
+                <div class="assistant-gm-content">
+                    <textarea id="assistant-gm-prompt" placeholder="Enter your prompt here"></textarea>
+                    <button id="assistant-gm-submit">Generate</button>
+                    <textarea id="assistant-gm-output" readonly></textarea>
+                    <div id="assistant-gm-journal-list" class="assistant-gm-journal-list">
+                        <h3>Select Journal Entries for Context</h3>
+                        <div id="assistant-gm-journal-entries"></div>
                     </div>
                 </div>
-            `);
-        
-            $('body').append(drawer);
-        
-            const drawerElement = $('#assistant-gm-drawer');
-            const handle = $('.assistant-gm-handle');
-            const content = $('.assistant-gm-content');
+            </div>
+        `);
+    
+        $('body').append(drawer);
+    
+        const drawerElement = $('#assistant-gm-drawer');
+        const handle = $('.assistant-gm-handle');
+        const content = $('.assistant-gm-content');
+        const journalEntriesList = $('#assistant-gm-journal-entries');
         
             let isDragging = false;
             let startY, startX, startDrawerHeight, startDrawerLeft;
@@ -202,7 +207,7 @@ export class AssistantGM {
             const prompt = $('#assistant-gm-prompt').val();
             const output = $('#assistant-gm-output');
             output.val('Generating...');
-
+    
             try {
                 const modelName = game.settings.get(this.ID, 'modelName');
                 
@@ -215,13 +220,13 @@ export class AssistantGM {
                         contextContent += `${journal.name}:\n${journal.pages.contents[0].text.content}\n\n`;
                     }
                 });
-
+    
                 // Construct the full prompt
                 let fullPrompt = prompt;
                 if (contextContent) {
                     fullPrompt += `\n\nUse the following content for context in preparing your response:\n${contextContent}`;
                 }
-
+    
                 const generatedText = await this.api.generateText(modelName, fullPrompt);
                 output.val(generatedText);
             } catch (error) {
