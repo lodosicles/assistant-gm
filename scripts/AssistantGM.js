@@ -8,10 +8,6 @@ export class AssistantGM {
 
     static async init() {
         console.log('AssistantGM | Initializing');
-        if (!game.user.isGM) {
-            console.log('AssistantGM | User is not GM, skipping initialization');
-            return;
-        }
         try {
             this.registerSettings();
             console.log('AssistantGM | Settings registered');
