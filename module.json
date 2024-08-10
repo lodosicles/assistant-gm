@@ -2,7 +2,7 @@
   "id": "assistant-gm",
   "title": "AssistantGM",
   "description": "AI-powered assistant for GMs in Foundry VTT",
-  "version": "1.0.0",
+  "version": "0.0.1",
   "compatibility": {
     "minimum": "10",
     "verified": "12",
@@ -21,7 +21,7 @@
       "path": "languages/en.json"
     }
   ],
-  "url": "https://github.com/yourusername/assistant-gm",
-  "manifest": "https://raw.githubusercontent.com/yourusername/assistant-gm/main/module.json",
-  "download": "https://github.com/yourusername/assistant-gm/releases/download/v1.0.0/assistant-gm-v1.0.0.zip"
+  "url": "https://github.com/lodosicles/assistant-gm",
+  "manifest": "https://raw.githubusercontent.com/lodosicles/assistant-gm/main/module.json",
+  "download": "https://github.com/lodosicles/assistant-gm/releases/download/v0.0.1/assistant-gm-v0.0.1.zip"
 }
