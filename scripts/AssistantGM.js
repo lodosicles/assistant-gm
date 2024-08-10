@@ -8,6 +8,10 @@ export class AssistantGM {
 
     static async init() {
         console.log('AssistantGM | Initializing');
+        if (!game.user.isGM) {
+            console.log('AssistantGM | User is not GM, skipping initialization');
+            return;
+        }
         try {
             this.registerSettings();
             console.log('AssistantGM | Settings registered');
@@ -23,18 +27,20 @@ export class AssistantGM {
             scope: 'world',
             config: true,
             type: String,
-            default: 'http://localhost:5932'
+            default: 'http://localhost:5932',
+            restricted: true  // Only visible to GMs
         });
-
+    
         game.settings.register(this.ID, 'jwtToken', {
             name: 'JWT Token',
             hint: 'Your JWT token for authentication',
             scope: 'world',
             config: true,
             type: String,
-            default: ''
+            default: '',
+            restricted: true  // Only visible to GMs
         });
-
+    
         game.settings.register(this.ID, 'modelName', {
             name: 'AI Model',
             hint: 'Select the AI model to use',
@@ -42,9 +48,10 @@ export class AssistantGM {
             config: true,
             type: String,
             default: '',
-            choices: {}
+            choices: {},
+            restricted: true  // Only visible to GMs
         });
-
+    
         // Add a custom button to the settings form
         game.settings.registerMenu(this.ID, 'fetchModels', {
             name: 'Fetch AI Models',
@@ -52,7 +59,7 @@ export class AssistantGM {
             hint: 'Fetch available AI models from the API',
             icon: 'fas fa-sync',
             type: FetchModelsForm,
-            restricted: true
+            restricted: true  // Only visible to GMs
         });
     }
 
@@ -63,6 +70,7 @@ export class AssistantGM {
     }
 
     static async ready() {
+        if (!game.user.isGM) return;
         console.log('AssistantGM | Ready method called');
         try {
             this.initializeAPI();
@@ -107,47 +115,43 @@ export class AssistantGM {
     }
 
     static createDrawer() {
-        if ($('#assistant-gm-drawer').length) {
-            return; // Drawer already exists, don't create another one
-        }
-
-        const drawer = $(`
-            <div id="assistant-gm-drawer" class="assistant-gm-drawer">
-                <div class="assistant-gm-handle">AI</div>
-                <div class="assistant-gm-content">
-                    <textarea id="assistant-gm-prompt" placeholder="Enter your prompt here"></textarea>
-                    <button id="assistant-gm-submit">Generate</button>
-                    <textarea id="assistant-gm-output" readonly></textarea>
-                    <div id="assistant-gm-journal-list" class="assistant-gm-journal-list">
-                        <h3>Select Journal Entries for Context</h3>
-                        <div id="assistant-gm-journal-entries"></div>
+        if (!game.user.isGM) return;
+            if ($('#assistant-gm-drawer').length) {
+                return; // Drawer already exists, don't create another one
+            }
+        
+            const drawer = $(`
+                <div id="assistant-gm-drawer" class="assistant-gm-drawer">
+                    <div class="assistant-gm-handle">AI</div>
+                    <div class="assistant-gm-content">
+                        <textarea id="assistant-gm-prompt" placeholder="Enter your prompt here"></textarea>
+                        <button id="assistant-gm-submit">Generate</button>
+                        <textarea id="assistant-gm-output" readonly></textarea>
                     </div>
                 </div>
-            </div>
-        `);
-
-        $('body').append(drawer);
-
-        const drawerElement = $('#assistant-gm-drawer');
-        const handle = $('.assistant-gm-handle');
-        const content = $('.assistant-gm-content');
-        const journalEntriesList = $('#assistant-gm-journal-entries');
-
-        let isDragging = false;
-        let startY, startX, startDrawerHeight, startDrawerLeft;
-        let moveThreshold = 5; // Pixels to move before deciding between resize and drag
-        let initialClickY, initialClickX;
-        let hasMovedPastThreshold = false;
-
-        handle.on('mousedown', (e) => {
-            if (e.button !== 0) return; // Only respond to left mouse button
-            isDragging = true;
-            startY = initialClickY = e.clientY;
-            startX = initialClickX = e.clientX;
-            startDrawerHeight = drawerElement.height();
-            startDrawerLeft = drawerElement.position().left;
-            hasMovedPastThreshold = false;
-            e.preventDefault();
+            `);
+        
+            $('body').append(drawer);
+        
+            const drawerElement = $('#assistant-gm-drawer');
+            const handle = $('.assistant-gm-handle');
+            const content = $('.assistant-gm-content');
+        
+            let isDragging = false;
+            let startY, startX, startDrawerHeight, startDrawerLeft;
+            let moveThreshold = 5; // Pixels to move before deciding between resize and drag
+            let initialClickY, initialClickX;
+            let hasMovedPastThreshold = false;
+        
+            handle.on('mousedown', (e) => {
+                if (e.button !== 0) return; // Only respond to left mouse button
+                isDragging = true;
+                startY = initialClickY = e.clientY;
+                startX = initialClickX = e.clientX;
+                startDrawerHeight = drawerElement.height();
+                startDrawerLeft = drawerElement.position().left;
+                hasMovedPastThreshold = false;
+                e.preventDefault();
         });
 
         $(document).on('mousemove', (e) => {
