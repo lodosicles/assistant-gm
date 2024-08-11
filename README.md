@@ -6,6 +6,8 @@ I have never coded a module for FoundryVTT before let alone anything in Javascri
 
 Also please note this is obviously not affiliated with Open WebUI or Ollama in any way.
 
+Please ensure you have installed [Open WebUI](https://openwebui.com/)
+
 ## Features
 
 - Integrates with Open WebUI API for AI text generation.
@@ -29,7 +31,7 @@ Also please note this is obviously not affiliated with Open WebUI or Ollama in a
 
 - Model selection.
 - Prompt generation.
-- Journal selection for context in prompt generation via a checkbox system.
+- Journal selection via a checkbox system, for adding context to the large language models response.
 
 ### Planned Features
 
