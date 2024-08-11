@@ -35,7 +35,8 @@ Please ensure you have installed [Open WebUI](https://openwebui.com/)
 
 ### Planned Features
 
-- Reduce the width size of the tab.
+- Adapt to access Ollama API directory (I'm currently struggling with CORS). 
+- Reduce the width size of the tab, and make the size of the underlying drawer customisable.
 - Change colour scheme to better match FoundryVTT,
 - Allow user to select whether responses are in markdown or in Prose Mirror.
 - Expanded journal selection allowing only individual pages to be sent as context if desired.
